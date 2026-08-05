@@ -236,12 +236,11 @@ geprüft.
 
 Was das für dich als Leser bedeutet:
 
-- 157 Unit-Tests und 9 End-to-End-Tests, alle grün, und die App lief gegen echte Claude- und
+- 177 Unit-Tests und 9 End-to-End-Tests, alle grün, und die App lief gegen echte Claude- und
   Codex-Konten.
 - **Es gab kein unabhängiges menschliches Code-Review.** Das Programm liest deine
   Anmeldedateien, also lies [SECURITY.md](SECURITY.md) — dort steht, welche Dateien angefasst
-  werden und an welche einzige Adresse überhaupt etwas geht — und überflieg den Code, bevor du
-  ihm vertraust.
+  werden und wohin überhaupt etwas geht — und überflieg den Code, bevor du ihm vertraust.
 - Mehrere Fehler wurden gefunden, indem jemand die App beim Fehlverhalten beobachtet hat, nicht
   durch Nachdenken über den Code. Der [Changelog](CHANGELOG.md) und die Commit-Nachrichten
   benennen das offen.

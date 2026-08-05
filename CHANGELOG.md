@@ -7,6 +7,39 @@ uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+Hardening at the edges the app does not control: a file someone edited by hand, a cache someone
+changed, an endpoint that accepts a connection and then says nothing. Found by an independent
+review of the 0.1.0 code, none of it reachable on the default path.
+
+### Fixed
+
+- A hand-edited `settings.json` no longer decides whether the app starts. Values that are valid
+  JSON but not valid settings — `"icons": null`, `"theme": null`, a refresh interval large enough
+  to overflow the poll timer — are normalised on load, and the repaired file is written back.
+- A cache entry that is valid JSON but unusable — `{"Claude": null}`, or one whose readings are
+  null — is dropped instead of throwing during start-up. `UsageCache.Load` documents itself as
+  never throwing; now that also holds for the file being semantically empty rather than malformed.
+- The Claude token refresh runs under the same deadline as the usage request it precedes. It was
+  given only the shutdown token, and the shared `HttpClient` has no timeout of its own, so a token
+  endpoint that stopped responding blocked polling until the app was restarted — the manual
+  refresh included, since it waits behind the same guard. Reachable only with
+  `claude.autoRefreshToken` enabled, which is off by default.
+- Restored readings age out. The two-day limit applied only when the cache was read from disk, so
+  an app left running for days with one provider down kept showing numbers that a restart would
+  have discarded.
+
+### Changed
+
+- The details window footer shows the oldest of the values on display instead of the newest. A
+  provider polling normally could otherwise put its own timestamp under numbers another one had
+  been serving from cache for hours.
+
+### Security
+
+- `SECURITY.md` claimed the Claude token goes to exactly one address. `claude.usageUrl` and
+  `claude.tokenUrl` are settings, so that was true of the shipped configuration and not of the
+  program. The section now says which it is, and what follows from it.
+
 ## [0.1.0] - 2026-08-05
 
 First release.
