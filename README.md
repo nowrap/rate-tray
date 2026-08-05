@@ -228,7 +228,7 @@ colours, thresholds, licence — and tested the running app.
 
 What that means for you as a reader:
 
-- There are 177 unit tests and 9 end-to-end tests, all passing, and the app has been run
+- There are 197 unit tests and 9 end-to-end tests, all passing, and the app has been run
   against live Claude and Codex accounts.
 - **It has had no independent human code review.** It reads your credential files, so read
   [SECURITY.md](SECURITY.md) — it states exactly which files are touched and where anything is
