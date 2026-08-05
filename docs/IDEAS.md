@@ -6,6 +6,27 @@ a bad idea on closer inspection.
 
 ## Running somewhere other than Windows
 
+### Prior art: CodexBar already covers macOS and the Linux CLI
+
+[steipete/CodexBar](https://github.com/steipete/CodexBar) is a macOS 14+ menu bar app doing the
+same job for far more providers — Codex, Claude, Cursor, Gemini, Copilot, Bedrock, OpenRouter,
+LiteLLM and others. MIT licensed, ~20k stars, actively maintained, and it ships a CLI with
+macOS **and Linux** builds (Homebrew tap, Arch AUR `codexbar-cli`).
+
+That settles two of the three directions below, and they are kept only for the reasoning:
+
+- **A macOS shell is not worth building.** Reimplementing a mature MIT project with broader
+  coverage would help nobody.
+- **The Linux status-line idea is largely served too.** `codexbar-cli` is exactly the "print one
+  short line" command that tmux, starship and waybar want.
+
+What remains genuinely uncovered is **Windows** — CodexBar has no tray app there, and since it
+is written in Swift, a Windows shell is not a natural contribution to it either. A separate
+.NET implementation is the reasonable answer, which is what this project is.
+
+Being MIT, it is also a legitimate reference for how other providers expose their limits, if
+this ever grows beyond two.
+
 ### What already ports
 
 The split is cleaner than it looks, because the providers were written without any knowledge of
@@ -27,7 +48,7 @@ and placement logic — and their unit tests — move unchanged.
 Roughly two thirds of the value (fetching, backoff, caching, colour system, translations)
 depends on no platform at all.
 
-### macOS is easier than Windows in one specific way
+### macOS is easier than Windows in one specific way — but see the prior art above
 
 `NSStatusItem` can put **text** in the menu bar directly. `TrayIconRenderer` — the single most
 delicate file in the project, source of both the double-centring bug and the HICON leak —
@@ -43,7 +64,7 @@ Tray on Linux means StatusNotifierItem over D-Bus. KDE and XFCE cooperate, GNOME
 extension, and text in the tray is supported inconsistently across panels. That is permanent
 fragility in exchange for a feature that only some users can see — worth doing last, if at all.
 
-### The status line is the better fit for Linux
+### The status line is the better fit for Linux — and `codexbar-cli` already provides it
 
 On a headless or remote machine there is no tray, but there are four places this information
 belongs:
@@ -69,10 +90,10 @@ back — which a CLI does naturally.
 
 ### Suggested first step
 
-Extract `RateTray.Core` and add `--line`. Half a day, useful immediately on Windows for tmux
-and starship users, and it turns "port the app" into three separate, tractable projects instead
-of one large one. A side benefit: the core's unit tests would run on Linux CI runners, which
-are faster and cheaper than the Windows ones.
+Extract `RateTray.Core` and add `--line`. Half a day. The cross-platform argument is weaker now
+that `codexbar-cli` exists, but two reasons survive on their own: Windows users of tmux, WSL
+and starship have no equivalent, and the core's unit tests would then run on Linux CI runners,
+which are faster and cheaper than the Windows ones.
 
 ## Packaging
 
