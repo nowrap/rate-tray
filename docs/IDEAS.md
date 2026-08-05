@@ -31,7 +31,7 @@ because no Windows counterpart did was simply wrong, and it had been published.
 
 What is actually different is the approach, not the platform. Those are the deluxe version:
 dashboards, dozens of providers, panels to open. RateTray keeps Core Temp's idea — the value is
-drawn into the tray icon itself, so nothing has to be opened or clicked. 345 KB against 28 MB,
+drawn into the tray icon itself, so nothing has to be opened or clicked. 352 KB against 28 MB,
 two services against 56. Whether that is worth having is a fair question; it is at least a
 different question from "does anything else exist".
 
@@ -177,7 +177,7 @@ the comfort of an MSI.
 The **runtime dependency** matters more. The published build is framework-dependent, so without
 the .NET 9 Desktop Runtime the executable fails to start. Declaring
 `Microsoft.DotNet.DesktopRuntime.9` as above makes winget install it. The alternative is a
-self-contained build: no dependency, but roughly 70 MB instead of 345 KB. Declaring the
+self-contained build: no dependency, but roughly 70 MB instead of 352 KB. Declaring the
 dependency is what winget resolution exists for.
 
 Test locally before submitting anything:

@@ -14,7 +14,7 @@
 <meta property="og:url" content="https://ratetray.nowrap.net/">
 <meta property="og:site_name" content="RateTray">
 <meta property="og:title" content="RateTray — live usage limits for Claude Code and Codex">
-<meta property="og:description" content="See a limit coming before it stops you mid-task. One tray icon per limit, read from the services themselves. 345 KB, MIT, no telemetry.">
+<meta property="og:description" content="See a limit coming before it stops you mid-task. One tray icon per limit, read from the services themselves. 352 KB, MIT, no telemetry.">
 <meta property="og:image" content="https://ratetray.nowrap.net/social.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -22,7 +22,7 @@
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="RateTray — live usage limits for Claude Code and Codex">
-<meta name="twitter:description" content="See a limit coming before it stops you mid-task. One tray icon per limit, read from the services themselves. 345 KB, MIT, no telemetry.">
+<meta name="twitter:description" content="See a limit coming before it stops you mid-task. One tray icon per limit, read from the services themselves. 352 KB, MIT, no telemetry.">
 <meta name="twitter:image" content="https://ratetray.nowrap.net/social.png">
 
 <link rel="icon" href="favicon.ico" sizes="any">
@@ -58,7 +58,7 @@
     </p>
 
     <ul class="facts label">
-      <li>345&nbsp;KB, one file</li>
+      <li>352&nbsp;KB, one file</li>
       <li>MIT, open source</li>
       <li>No telemetry, one endpoint</li>
       <li>Claude&nbsp;Code + Codex</li>
@@ -294,18 +294,24 @@
   <section id="privacy">
     <div class="wrap">
       <span class="label">What it touches</span>
-      <h2>Two files read, one address contacted</h2>
+      <h2>Two files read, one address by default</h2>
       <p class="muted">
         Credentials are read from the files the official CLIs already maintain, and are never
-        copied, logged, or sent anywhere else. The only destination is Anthropic's usage
-        endpoint; Codex data never leaves your machine. There is no telemetry and no update
-        check.
+        copied, logged, or sent anywhere else. As shipped there is one destination — Anthropic's
+        usage endpoint — and Codex data never leaves your machine at all. No telemetry, no
+        update check.
       </p>
       <p class="muted">
-        You should not take that on trust. This reads your credential files, and it was written
-        by an AI coding agent under human direction with no independent human review — a
-        combination worth being sceptical about. Which is the useful thing about 345&nbsp;KB and
-        3,600 lines of C#: it is small enough to read yourself before you run it.
+        That address is a setting rather than a constant, so that an endpoint which moves can be
+        corrected without a new build. Which is why a credential only ever travels over https,
+        and an endpoint other than the default is named in the app: changing where the numbers
+        come from stays a visible choice.
+      </p>
+      <p class="muted">
+        You should not take any of that on trust. This reads your credential files, and it was
+        written by an AI coding agent under human direction with no independent human review — a
+        combination worth being sceptical about. Which is the useful thing about 352&nbsp;KB and
+        3,350 lines of C#: it is small enough to read yourself before you run it.
       </p>
       <p><a href="https://github.com/nowrap/rate-tray/blob/main/SECURITY.md">Read what exactly is read and written →</a></p>
     </div>
