@@ -91,8 +91,10 @@
   "label.claude.extraUsage": "Extra credit",
   "note.claude.extraCurrency": "Limit in {0}",
   "label.codex.window": "Codex · {0}",
+  "note.endpoint": "Endpoint: {0}",
 
   "error.claude.noCredentials": "No Claude sign-in found (.credentials.json missing)",
+  "error.claude.insecureUrl": "Endpoint is not https, no token sent: {0}",
   "error.claude.unreadable": "Credentials unreadable: {0}",
   "error.claude.expired": "Token expired — start Claude Code (or enable autoRefreshToken)",
   "error.claude.refreshFailed": "Token refresh failed — start Claude Code",

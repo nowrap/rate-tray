@@ -35,6 +35,29 @@ public sealed class ClaudeUsageProvider(ClaudeOptions options) : IUsageProvider
 
     public async Task<ProviderResult> ReadAsync(CancellationToken ct)
     {
+        var result = await PollAsync(ct).ConfigureAwait(false);
+        return EndpointNotice() is { } notice ? result with { Notice = notice } : result;
+    }
+
+    /// <summary>
+    /// Names a configured endpoint that is not the shipped one, so the choice stays visible
+    /// wherever the result is shown. The token URL only counts while the refresh can actually
+    /// run — pointing out a setting nothing reads would just teach people to ignore the line.
+    /// </summary>
+    internal string? EndpointNotice()
+    {
+        var hosts = new[]
+        {
+            Endpoint.ForeignHost(options.UsageUrl, ClaudeOptions.UsageUrlDefault),
+            options.AutoRefreshToken ? Endpoint.ForeignHost(options.TokenUrl, ClaudeOptions.TokenUrlDefault) : null,
+        };
+
+        var named = hosts.OfType<string>().Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        return named.Count == 0 ? null : Loc.T("note.endpoint", string.Join(", ", named));
+    }
+
+    private async Task<ProviderResult> PollAsync(CancellationToken ct)
+    {
         Credentials creds;
         try
         {
@@ -55,6 +78,12 @@ public sealed class ClaudeUsageProvider(ClaudeOptions options) : IUsageProvider
 
         var auth = AuthFrom(creds);
 
+        // Checked before the token is anywhere near a socket: over plain http it would be on
+        // the wire in clear, and a poll that fails loudly is the only way a typo in a URL that
+        // carries a credential becomes visible at all.
+        if (!Endpoint.IsSecure(options.UsageUrl))
+            return ProviderResult.Failed(Group, Loc.T("error.claude.insecureUrl", options.UsageUrl)) with { Auth = auth };
+
         // One deadline for the whole poll, refresh included. The shared client has no timeout of
         // its own, so a token endpoint that accepts the connection and then says nothing would
         // block this task forever — and with it the guard that keeps polls from stacking up,
@@ -68,6 +97,12 @@ public sealed class ClaudeUsageProvider(ClaudeOptions options) : IUsageProvider
             {
                 if (!options.AutoRefreshToken)
                     return ProviderResult.Failed(Group, Loc.T("error.claude.expired")) with { Auth = auth };
+
+                // The refresh token is the more valuable of the two and goes to a second,
+                // separately configured URL, so it gets the same check rather than inheriting
+                // the one above.
+                if (!Endpoint.IsSecure(options.TokenUrl))
+                    return ProviderResult.Failed(Group, Loc.T("error.claude.insecureUrl", options.TokenUrl)) with { Auth = auth };
 
                 var refreshed = await TryRefreshAsync(creds, deadline.Token).ConfigureAwait(false);
                 if (refreshed is null)

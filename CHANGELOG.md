@@ -39,6 +39,11 @@ review of the 0.1.0 code, none of it reachable on the default path.
 - `SECURITY.md` claimed the Claude token goes to exactly one address. `claude.usageUrl` and
   `claude.tokenUrl` are settings, so that was true of the shipped configuration and not of the
   program. The section now says which it is, and what follows from it.
+- A credential is only sent over https. Both URLs stay settings — correcting a moved endpoint
+  without a rebuild is the reason they exist — but a plain-http value now fails the poll before a
+  connection is opened, with loopback excepted so a local mock still works.
+- An endpoint whose host is not the shipped one is named in the details window and in `--once`.
+  Pointing the tray somewhere else stays a deliberate choice; it stops being an invisible one.
 
 ## [0.1.0] - 2026-08-05
 

@@ -1,3 +1,4 @@
+using RateTray.Configuration;
 using RateTray.Localization;
 using RateTray.Providers;
 
@@ -109,5 +110,65 @@ public class ClaudeUsageProviderTests
     {
         // Swallowing this would show an account with zero limits instead of a failed request.
         Assert.ThrowsAny<Exception>(() => ClaudeUsageProvider.Parse(payload));
+    }
+
+    [Fact]
+    public async Task An_endpoint_that_is_not_https_fails_the_poll_rather_than_sending_the_token()
+    {
+        var credentials = Path.Combine(Path.GetTempPath(), $"tbm-creds-{Guid.NewGuid():N}.json");
+        var expires = DateTimeOffset.UtcNow.AddHours(2).ToUnixTimeMilliseconds();
+        File.WriteAllText(credentials, $$"""
+            { "claudeAiOauth": { "accessToken": "secret", "refreshToken": "also-secret", "expiresAt": {{expires}} } }
+            """);
+
+        try
+        {
+            var provider = new ClaudeUsageProvider(new ClaudeOptions
+            {
+                CredentialsPath = credentials,
+                UsageUrl = "http://usage.example.com/api/oauth/usage",
+            });
+
+            var result = await provider.ReadAsync(CancellationToken.None);
+
+            // The check sits in front of the socket, not after it, so nothing was sent to fail.
+            Assert.False(result.Ok);
+            Assert.Contains("https", result.Error);
+        }
+        finally
+        {
+            File.Delete(credentials);
+        }
+    }
+
+    [Fact]
+    public void A_token_url_is_only_named_while_the_refresh_can_actually_run()
+    {
+        var options = new ClaudeOptions { TokenUrl = "https://token.example.com/v1/oauth/token" };
+
+        // Pointing at a setting nothing reads would teach people to ignore the line.
+        Assert.Null(new ClaudeUsageProvider(options).EndpointNotice());
+
+        options.AutoRefreshToken = true;
+        Assert.Equal("Endpoint: token.example.com", new ClaudeUsageProvider(options).EndpointNotice());
+    }
+
+    [Fact]
+    public void One_host_is_named_once_even_when_both_urls_point_at_it()
+    {
+        var provider = new ClaudeUsageProvider(new ClaudeOptions
+        {
+            UsageUrl = "https://mirror.example.com/api/oauth/usage",
+            TokenUrl = "https://mirror.example.com/v1/oauth/token",
+            AutoRefreshToken = true,
+        });
+
+        Assert.Equal("Endpoint: mirror.example.com", provider.EndpointNotice());
+    }
+
+    [Fact]
+    public void The_shipped_configuration_says_nothing()
+    {
+        Assert.Null(new ClaudeUsageProvider(new ClaudeOptions { AutoRefreshToken = true }).EndpointNotice());
     }
 }

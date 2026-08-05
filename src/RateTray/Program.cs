@@ -119,6 +119,11 @@ internal static class Program
             if (result.Auth is { } auth)
                 Console.WriteLine($"   Sign-in: {auth.Summary()}   ({auth.Detail})");
 
+            // Belongs in a pasted diagnostic more than anywhere else: it explains numbers that
+            // came from somewhere other than the endpoint everyone else is reading.
+            if (result.Notice is { } notice)
+                Console.WriteLine($"   {notice}");
+
             foreach (var reading in result.Readings)
             {
                 Console.WriteLine(

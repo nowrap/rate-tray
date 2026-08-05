@@ -32,6 +32,12 @@ Locally that grants nothing new, since the same access reads `.credentials.json`
 mean a settings file taken from someone else deserves a read before it is used, like any config
 carrying a URL.
 
+Two rules keep such a change from being a quiet one. A credential is only ever sent over https —
+anything else fails the poll with *"Endpoint is not https, no token sent"* before a connection is
+opened, with loopback excepted so a local mock still works. And an endpoint whose host is not the
+one shipped is named in the details window and in `--once` output. Neither prevents a deliberate
+change; both stop it from being one nobody notices.
+
 Codex data does not involve the network at all from this app's side — it starts a local
 `codex app-server` process and speaks JSON-RPC to it over stdio. Whatever that process does
 upstream is the Codex CLI's own behaviour.
