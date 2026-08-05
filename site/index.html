@@ -192,8 +192,19 @@ a:hover { text-decoration-color: currentColor; }
   background: var(--raised);
 }
 
+/* Verifiable facts, not adjectives: every one of these can be checked in a minute. */
+.facts {
+  display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem;
+  margin: 1.5rem 0 0; padding: 0; list-style: none;
+}
+.facts li { display: flex; align-items: baseline; gap: 0.45rem; }
+/* Neutral, not green: the service colours mean "this is a reading". Spending one on a
+   decorative tick in the first screen would undo the rule the page is built on. */
+.facts li::before { content: "\2713"; color: var(--faint); font-size: 0.8em; }
+
 /* ------------------------------------------------------------- actions -- */
 .actions { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 2rem; align-items: center; }
+.requirement { margin-top: 0.85rem; font-size: 0.86rem; color: var(--muted); }
 .btn {
   display: inline-block;
   padding: 0.62rem 1.15rem;
@@ -292,10 +303,18 @@ footer p { font-size: 0.88rem; }
   <div class="wrap hero">
     <h1>Live usage limits for Claude&nbsp;Code and Codex, in the Windows tray.</h1>
     <p class="sub">
-      One icon per limit, drawn the way Core&nbsp;Temp shows per-core CPU values. The numbers come
-      from the services themselves, so they are not an estimate — and fetching them costs no
-      model tokens.
+      <strong style="font-weight: 600;">See a limit coming before it stops you mid-task.</strong>
+      One icon per limit, drawn the way Core&nbsp;Temp shows per-core CPU values — read from the
+      services themselves, so the numbers are not an estimate, and checking them costs no model
+      tokens.
     </p>
+
+    <ul class="facts label">
+      <li>345&nbsp;KB, one file</li>
+      <li>MIT, open source</li>
+      <li>No telemetry, one endpoint</li>
+      <li>Claude&nbsp;Code + Codex</li>
+    </ul>
 
     <figure class="specimen">
       <div class="taskbar" id="tray" aria-hidden="true">
@@ -329,6 +348,13 @@ footer p { font-size: 0.88rem; }
       <a class="btn" href="https://github.com/nowrap/rate-tray/releases/latest">Download</a>
       <a class="btn secondary" href="https://github.com/nowrap/rate-tray">View source</a>
     </div>
+    <!-- Next to the button, not in a requirements list further down: without the runtime the
+         first launch fails with a dialog, and that user does not come back. -->
+    <p class="requirement">
+      Windows 10 or 11, and the
+      <a href="https://dotnet.microsoft.com/download/dotnet/9.0">.NET&nbsp;9 Desktop Runtime</a>
+      — not bundled, so install it first if you do not have it.
+    </p>
   </div>
 
   <section id="colour">
@@ -340,6 +366,10 @@ footer p { font-size: 0.88rem; }
         its service's colour, shaded apart from the other limits of that service. Above it,
         severity takes over for everything — so a warning never depends on knowing which colour
         belongs to which service.
+      </p>
+      <p class="muted">
+        Colour is the second channel, never the only one: the percentage is always on the icon,
+        the hover card names the limit, and both thresholds are yours to move.
       </p>
 
       <div class="rules" style="margin-top: 2rem;">
@@ -429,6 +459,12 @@ footer p { font-size: 0.88rem; }
         copied, logged, or sent anywhere else. The only destination is Anthropic's usage
         endpoint; Codex data never leaves your machine. There is no telemetry and no update
         check.
+      </p>
+      <p class="muted">
+        You should not take that on trust. This reads your credential files, and it was written
+        by an AI coding agent under human direction with no independent human review — a
+        combination worth being sceptical about. Which is the useful thing about 345&nbsp;KB and
+        3,600 lines of C#: it is small enough to read yourself before you run it.
       </p>
       <p><a href="https://github.com/nowrap/rate-tray/blob/main/SECURITY.md">Read what exactly is read and written →</a></p>
     </div>
