@@ -1,0 +1,73 @@
+name: Bug report
+description: Something does not work as described
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. The `--once` output below answers most questions at once, so
+        please include it if you can.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you expected, and what happened instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostic output
+      description: |
+        Run this and paste the result. It contains no tokens — only limit ids, percentages and
+        reset times.
+
+        ```powershell
+        Start-Process .\RateTray.exe -ArgumentList "--once" -Wait -NoNewWindow `
+          -RedirectStandardOutput out.txt ; Get-Content out.txt
+        ```
+      render: text
+
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      placeholder: 'v0.1.0, or the commit you built from'
+    validations:
+      required: true
+
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version and display scaling
+      description: Relevant for anything about window placement or icon rendering.
+      placeholder: 'Windows 11 24H2, 2560x1440 at 150 %, three monitors'
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: services
+    attributes:
+      label: Which services are signed in
+      options:
+        - label: Claude Code
+        - label: Codex CLI
+
+  - type: textarea
+    id: settings
+    attributes:
+      label: settings.json
+      description: Optional. From `%APPDATA%\RateTray\settings.json` — it contains no credentials.
+      render: json

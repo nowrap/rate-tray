@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    # WinForms and GDI+ throughout — this cannot build or run on Linux.
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore
+        run: dotnet restore RateTray.sln
+
+      - name: Build
+        run: dotnet build RateTray.sln --configuration Release --no-restore
+
+      - name: Unit tests
+        run: >
+          dotnet test tests/RateTray.Tests/RateTray.Tests.csproj
+          --configuration Release --no-build --logger "trx;LogFileName=unit.trx"
+          --results-directory TestResults
+
+      # The e2e suite skips the tests that need a desktop session or live CLI sign-ins, so on a
+      # hosted runner it verifies little more than that the binary launches. Kept in CI anyway:
+      # it catches a harness that no longer finds or starts the app at all.
+      - name: End-to-end tests
+        run: >
+          dotnet test tests/RateTray.E2E/RateTray.E2E.csproj
+          --configuration Release --no-build --logger "trx;LogFileName=e2e.trx"
+          --results-directory TestResults
+
+      - name: Publish single file
+        run: >
+          dotnet publish src/RateTray/RateTray.csproj
+          --configuration Release --runtime win-x64 --output publish
+
+      - name: Upload build
+        uses: actions/upload-artifact@v4
+        with:
+          name: RateTray
+          path: publish/RateTray.exe
+          if-no-files-found: error
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/*.trx
+          if-no-files-found: ignore

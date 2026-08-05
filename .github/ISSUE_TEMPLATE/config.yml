@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: ../../security/advisories/new
+    about: Please report privately rather than as a public issue.
+  - name: Claude Code or Codex CLI itself
+    url: https://github.com/anthropics/claude-code/issues
+    about: Problems with the CLIs belong with their vendors, not here.

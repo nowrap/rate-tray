@@ -1,0 +1,29 @@
+name: Feature request
+description: Suggest an addition or change
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do
+      description: The situation, not the solution — it often has more than one answer.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you have in mind
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      description: |
+        This is a status indicator. Out of scope: sending usage data anywhere, background
+        agents, and anything needing credentials the official CLIs do not already store locally.
+      options:
+        - label: This fits that scope
+          required: true
