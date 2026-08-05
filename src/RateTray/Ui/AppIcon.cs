@@ -27,7 +27,7 @@ public static class AppIcon
             using var stream = typeof(AppIcon).Assembly.GetManifestResourceStream("RateTray.app.ico");
             return stream is null ? null : new Icon(stream);
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is ArgumentException or IOException)
         {
             return null;
         }

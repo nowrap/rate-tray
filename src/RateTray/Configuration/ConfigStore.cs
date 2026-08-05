@@ -1,3 +1,4 @@
+using System.Security;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -46,7 +47,8 @@ public static class ConfigStore
 
             return config;
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException
+                                      or SecurityException or JsonException or NotSupportedException)
         {
             TryPreserveBrokenFile();
             return new AppConfig();
@@ -63,7 +65,8 @@ public static class ConfigStore
             File.WriteAllText(temp, json);
             File.Move(temp, Path_, overwrite: true);
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException
+                                      or SecurityException or NotSupportedException)
         {
             // A read-only profile shouldn't take the tray down; the in-memory config still applies.
         }
@@ -75,7 +78,8 @@ public static class ConfigStore
         {
             if (File.Exists(Path_)) File.Copy(Path_, Path_ + ".bad", overwrite: true);
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException
+                                      or SecurityException or NotSupportedException)
         {
             // best effort only
         }

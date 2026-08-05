@@ -29,3 +29,6 @@ Desktop.ini
 # Copied into site/ at build time from docs/ and src/ — one source of truth, not two
 site/*.png
 site/favicon.ico
+
+# Local scratch, never published
+.private/

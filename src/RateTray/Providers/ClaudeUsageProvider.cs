@@ -46,7 +46,8 @@ public sealed class ClaudeUsageProvider(ClaudeOptions options) : IUsageProvider
                 Auth = new AuthStatus { Group = Group, IsValid = false, Detail = Loc.T("auth.notLoggedIn") },
             };
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException
+                                      or JsonException or InvalidDataException or InvalidOperationException)
         {
             return ProviderResult.Failed(Group, Loc.T("error.claude.unreadable", ex.Message));
         }
@@ -240,7 +241,7 @@ public sealed class ClaudeUsageProvider(ClaudeOptions options) : IUsageProvider
     {
         if (node is null) return null;
         try { return node.GetValue<double>(); }
-        catch (Exception) { return null; }
+        catch (Exception ex) when (ex is InvalidOperationException or FormatException) { return null; }
     }
 
     private static DateTimeOffset? ReadIsoDate(JsonNode? node)
@@ -302,7 +303,9 @@ public sealed class ClaudeUsageProvider(ClaudeOptions options) : IUsageProvider
         {
             throw;
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is HttpRequestException or JsonException
+                                      or IOException or UnauthorizedAccessException
+                                      or InvalidOperationException)
         {
             return null;
         }

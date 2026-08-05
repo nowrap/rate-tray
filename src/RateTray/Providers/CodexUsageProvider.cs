@@ -1,5 +1,7 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using RateTray.Configuration;
 using RateTray.Localization;
@@ -218,7 +220,8 @@ public sealed class CodexUsageProvider(CodexOptions options) : IUsageProvider
                 Detail = mode is { Length: > 0 } ? mode : "chatgpt",
             };
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException
+                                      or JsonException or InvalidOperationException)
         {
             return null;
         }
@@ -237,7 +240,8 @@ public sealed class CodexUsageProvider(CodexOptions options) : IUsageProvider
             var exp = JsonNode.Parse(json)?["exp"]?.GetValue<long>();
             return exp is > 0 ? DateTimeOffset.FromUnixTimeSeconds(exp.Value) : null;
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is FormatException or JsonException
+                                      or InvalidOperationException or ArgumentException)
         {
             return null;
         }
@@ -277,16 +281,16 @@ public sealed class CodexUsageProvider(CodexOptions options) : IUsageProvider
         {
             if (!process.HasExited) process.Kill(entireProcessTree: true);
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is InvalidOperationException or Win32Exception or NotSupportedException)
         {
-            // already gone
+            // The process can exit between HasExited and Kill; that race is the normal case.
         }
     }
 
     private static async Task<string> SafeAwait(Task<string> task)
     {
         try { return await task.WaitAsync(TimeSpan.FromSeconds(2)).ConfigureAwait(false); }
-        catch (Exception) { return string.Empty; }
+        catch (Exception ex) when (ex is TimeoutException or IOException or ObjectDisposedException) { return string.Empty; }
     }
 
     private static int? ReadId(JsonObject message)
@@ -294,7 +298,7 @@ public sealed class CodexUsageProvider(CodexOptions options) : IUsageProvider
         var id = message["id"];
         if (id is null) return null;
         try { return id.GetValue<int>(); }
-        catch (Exception) { return null; }
+        catch (Exception ex) when (ex is InvalidOperationException or FormatException) { return null; }
     }
 
     private static string Slug(string value) =>

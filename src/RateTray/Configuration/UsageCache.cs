@@ -1,3 +1,4 @@
+using System.Security;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using RateTray.Model;
@@ -47,7 +48,8 @@ public static class UsageCache
                 .Where(entry => DateTimeOffset.Now - entry.Value.FetchedAt <= MaxAge)
                 .ToDictionary(entry => entry.Key, entry => entry.Value, StringComparer.OrdinalIgnoreCase);
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException
+                                      or SecurityException or JsonException or NotSupportedException)
         {
             return [];
         }
@@ -64,7 +66,8 @@ public static class UsageCache
             File.WriteAllText(temp, JsonSerializer.Serialize(entries, Options));
             File.Move(temp, file, overwrite: true);
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException
+                                      or SecurityException or NotSupportedException)
         {
             // A cache that cannot be written is a missing optimisation, not a failure.
         }

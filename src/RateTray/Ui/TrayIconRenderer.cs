@@ -2,6 +2,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.Runtime.InteropServices;
+using System.Security;
 using Microsoft.Win32;
 
 namespace RateTray.Ui;
@@ -102,7 +103,7 @@ public static class TrayIconRenderer
                 @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
             return key?.GetValue("SystemUsesLightTheme") is int light ? light == 0 : true;
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is SecurityException or UnauthorizedAccessException or IOException)
         {
             return true;
         }

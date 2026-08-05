@@ -93,7 +93,7 @@ public static class Loc
 
             return JsonSerializer.Deserialize<Dictionary<string, string>>(stream) ?? [];
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is JsonException or IOException or NotSupportedException)
         {
             return [];
         }

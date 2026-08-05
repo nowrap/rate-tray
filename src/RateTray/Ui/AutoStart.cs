@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Security;
 using Microsoft.Win32;
 
 namespace RateTray.Ui;
@@ -18,7 +19,7 @@ public static class AutoStart
                 using var key = Registry.CurrentUser.OpenSubKey(RunKey);
                 return key?.GetValue(ValueName) is string value && value.Length > 0;
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is SecurityException or UnauthorizedAccessException or IOException)
             {
                 return false;
             }
@@ -46,7 +47,8 @@ public static class AutoStart
 
             return true;
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is SecurityException or UnauthorizedAccessException
+                                      or IOException or ArgumentException)
         {
             error = ex.Message;
             return false;
