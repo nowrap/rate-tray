@@ -20,7 +20,8 @@ public sealed class ClaudeUsageProvider(ClaudeOptions options) : IUsageProvider
     /// <summary>
     /// Shared, with its own timeout disabled: the per-request deadline comes from
     /// <see cref="ClaudeOptions.TimeoutSeconds"/> via a linked token, which a static client
-    /// cannot express through <c>HttpClient.Timeout</c>.
+    /// cannot express through <c>HttpClient.Timeout</c>. Every call through it therefore has to
+    /// pass that token — one that only carries the shutdown token can hang indefinitely.
     /// </summary>
     private static readonly HttpClient Http = new() { Timeout = Timeout.InfiniteTimeSpan };
 
@@ -54,24 +55,28 @@ public sealed class ClaudeUsageProvider(ClaudeOptions options) : IUsageProvider
 
         var auth = AuthFrom(creds);
 
-        if (creds.IsExpired)
-        {
-            if (!options.AutoRefreshToken)
-                return ProviderResult.Failed(Group, Loc.T("error.claude.expired")) with { Auth = auth };
-
-            var refreshed = await TryRefreshAsync(creds, ct).ConfigureAwait(false);
-            if (refreshed is null)
-                return ProviderResult.Failed(Group, Loc.T("error.claude.refreshFailed")) with { Auth = auth };
-
-            creds = refreshed;
-            auth = AuthFrom(creds);
-        }
-
+        // One deadline for the whole poll, refresh included. The shared client has no timeout of
+        // its own, so a token endpoint that accepts the connection and then says nothing would
+        // block this task forever — and with it the guard that keeps polls from stacking up,
+        // which no later poll and no manual refresh could clear short of a restart.
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(ct);
         deadline.CancelAfter(TimeSpan.FromSeconds(Math.Max(5, options.TimeoutSeconds)));
 
         try
         {
+            if (creds.IsExpired)
+            {
+                if (!options.AutoRefreshToken)
+                    return ProviderResult.Failed(Group, Loc.T("error.claude.expired")) with { Auth = auth };
+
+                var refreshed = await TryRefreshAsync(creds, deadline.Token).ConfigureAwait(false);
+                if (refreshed is null)
+                    return ProviderResult.Failed(Group, Loc.T("error.claude.refreshFailed")) with { Auth = auth };
+
+                creds = refreshed;
+                auth = AuthFrom(creds);
+            }
+
             using var request = new HttpRequestMessage(HttpMethod.Get, options.UsageUrl);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", creds.AccessToken);
             request.Headers.Add("anthropic-beta", "oauth-2025-04-20");
@@ -272,7 +277,9 @@ public sealed class ClaudeUsageProvider(ClaudeOptions options) : IUsageProvider
 
     /// <summary>
     /// Exchanges the refresh token and writes the result back, preserving every other field
-    /// in the file so Claude Code keeps working. Returns null on any failure.
+    /// in the file so Claude Code keeps working. Returns null on any failure; a cancelled
+    /// <paramref name="ct"/> — shutdown or the poll deadline — is thrown on for the caller
+    /// to tell apart.
     /// </summary>
     private async Task<Credentials?> TryRefreshAsync(Credentials creds, CancellationToken ct)
     {

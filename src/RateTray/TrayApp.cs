@@ -52,6 +52,16 @@ public sealed class TrayApp : ApplicationContext
     /// <summary>Decides which providers may be polled after a failure.</summary>
     private readonly PollScheduler _schedule;
 
+    /// <summary>
+    /// Poll interval in milliseconds. Multiplied as a <c>long</c> on purpose: a hand-edited
+    /// refreshSeconds big enough to overflow an int used to arrive as a negative interval, which
+    /// the timer rejects — the config is clamped, and this keeps the arithmetic safe regardless.
+    /// </summary>
+    private int PollIntervalMs => (int)Math.Clamp(
+        (long)Math.Max(MinRefreshSeconds, _config.RefreshSeconds) * 1000,
+        MinRefreshSeconds * 1000L,
+        int.MaxValue);
+
     public TrayApp()
     {
         _config = ConfigStore.Load();
@@ -70,7 +80,7 @@ public sealed class TrayApp : ApplicationContext
         BuildMenu();
         ShowCachedReadings();
 
-        _timer.Interval = Math.Max(MinRefreshSeconds, _config.RefreshSeconds) * 1000;
+        _timer.Interval = PollIntervalMs;
         _timer.Tick += (_, _) => { ScheduleNextPoll(); _ = RefreshAsync(); };
         _timer.Start();
         ScheduleNextPoll();
@@ -123,11 +133,14 @@ public sealed class TrayApp : ApplicationContext
                 .SelectMany(r => r.Readings)
                 .GroupBy(r => r.Id)
                 .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
-            // The freshest data actually held — older than "now" whenever a provider is
-            // being served from cache.
-            _lastUpdate = _lastGood.Count > 0
-                ? _lastGood.Values.Max(entry => entry.FetchedAt)
-                : DateTimeOffset.Now;
+            // The oldest of the values on display, not the newest: one provider polling fine
+            // would otherwise put its own time under numbers the other one has been serving from
+            // cache for hours. Only providers in this cycle count, so a disabled one cannot
+            // age the footer with an entry nothing is drawing.
+            _lastUpdate = results
+                .Select(r => _lastGood.TryGetValue(r.Group, out var entry) ? entry.FetchedAt : (DateTimeOffset?)null)
+                .Where(fetched => fetched is not null)
+                .Min() ?? DateTimeOffset.Now;
 
             SeedIconsOnFirstRun();
             SyncIcons();
@@ -161,7 +174,7 @@ public sealed class TrayApp : ApplicationContext
             .SelectMany(r => r.Readings)
             .GroupBy(r => r.Id)
             .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
-        _lastUpdate = _lastGood.Values.Max(entry => entry.FetchedAt);
+        _lastUpdate = _lastGood.Values.Min(entry => entry.FetchedAt);
 
         SyncIcons();
         RefreshIconsMenu();
@@ -182,12 +195,23 @@ public sealed class TrayApp : ApplicationContext
             return result;
         }
 
+        var now = DateTimeOffset.Now;
         var retryAt = _schedule.RecordFailure(
-            result.Group, result.RetryAfter, DateTimeOffset.Now, _config.RefreshSeconds, result.RateLimited);
+            result.Group, result.RetryAfter, now, _config.RefreshSeconds, result.RateLimited);
 
-        return _lastGood.TryGetValue(result.Group, out var previous)
-            ? result with { Readings = previous.Readings, RetryAt = retryAt }
-            : result with { RetryAt = retryAt };
+        if (!_lastGood.TryGetValue(result.Group, out var previous))
+            return result with { RetryAt = retryAt };
+
+        // Numbers that are too old to load from disk are too old to keep showing. Dropping the
+        // entry also stops it being written back to the cache on the next successful poll.
+        if (!UsageCache.IsFresh(previous, now))
+        {
+            _lastGood.Remove(result.Group);
+            UsageCache.Save(_lastGood);
+            return result with { RetryAt = retryAt };
+        }
+
+        return result with { Readings = previous.Readings, RetryAt = retryAt };
     }
 
     private void ScheduleNextPoll() => _nextPoll = DateTimeOffset.Now.AddMilliseconds(_timer.Interval);
@@ -517,7 +541,7 @@ public sealed class TrayApp : ApplicationContext
         if (form.ShowDialog() != DialogResult.OK) return;
 
         Loc.Use(_config.Language);
-        _timer.Interval = Math.Max(MinRefreshSeconds, _config.RefreshSeconds) * 1000;
+        _timer.Interval = PollIntervalMs;
         ScheduleNextPoll();
 
         // Both windows cache fonts and colours at construction, so they are rebuilt rather

@@ -38,11 +38,12 @@ public static class ConfigStore
             }
 
             var json = File.ReadAllText(Path_);
-            var config = JsonSerializer.Deserialize<AppConfig>(json, Options) ?? new AppConfig();
+            var config = FromJson(json);
 
-            // A file written by an older version is missing whatever options were added since.
-            // Those load as defaults, so writing the file back leaves it complete and
-            // self-documenting instead of silently short.
+            // A file written by an older version is missing whatever options were added since,
+            // and a hand-edited one may just have had nulls or out-of-range numbers repaired.
+            // Writing it back leaves the file complete, self-documenting and no longer broken
+            // instead of silently short.
             if (JsonSerializer.Serialize(config, Options) != json) Save(config);
 
             return config;
@@ -54,6 +55,14 @@ public static class ConfigStore
             return new AppConfig();
         }
     }
+
+    /// <summary>
+    /// Deserialises and normalises: the pure half of <see cref="Load"/>, so the hardening
+    /// against a hand-edited file can be tested without touching %APPDATA%. Throws on malformed
+    /// JSON — that is <see cref="Load"/>'s job to catch, together with the unreadable file.
+    /// </summary>
+    public static AppConfig FromJson(string json) =>
+        (JsonSerializer.Deserialize<AppConfig>(json, Options) ?? new AppConfig()).Normalize();
 
     public static void Save(AppConfig config)
     {
