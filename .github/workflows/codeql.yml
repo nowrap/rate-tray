@@ -33,7 +33,12 @@ jobs:
         with:
           languages: csharp
           build-mode: manual
-          queries: security-and-quality
+          # security-extended, not security-and-quality. The quality queries produced sixty
+          # standing findings and not one of them carried a security severity: P/Invoke notes
+          # in a P/Invoke file, Path.Combine notes, missing xmldoc, and casts the language
+          # actually requires. A tab that always shows sixty items is a tab you stop opening,
+          # which is how the one real finding gets missed. Compiler warnings cover style.
+          queries: security-extended
 
       # Explicit rather than autobuild: the solution has three projects and one of them
       # only exists to drive the built executable, so leaving the choice to a heuristic
