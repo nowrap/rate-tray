@@ -133,6 +133,7 @@ public sealed class DetailsForm : Form
         {
             height += Px(26);                                   // group header
             if (result.Auth is not null) height += Px(18);
+            if (result.Notice is not null) height += Px(18);
             if (result.Error is not null) height += Px(20);
             height += result.Readings.Count * Px(46);
             height += Px(10);
@@ -231,6 +232,15 @@ public sealed class DetailsForm : Form
                            (auth.Detail is { Length: > 0 } d ? $"  ·  {d}" : "");
                 using var brush = new SolidBrush(auth.IsValid ? Muted : Harmony.Legible(_palette.Critical, Dark));
                 g.DrawString(text, _smallFont, brush, pad, y);
+                y += Px(18);
+            }
+
+            if (result.Notice is { } notice)
+            {
+                // Not an error, so not in the critical colour — but not muted away either:
+                // an endpoint someone else configured should catch the eye once.
+                using var brush = new SolidBrush(Harmony.Legible(_palette.Warn, Dark));
+                g.DrawString(notice, _smallFont, brush, pad, y);
                 y += Px(18);
             }
 

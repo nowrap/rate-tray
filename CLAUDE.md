@@ -151,3 +151,10 @@ fresh and the tray just re-reads it. That refresh path (`tokenUrl` + `clientId` 
 settings.json) has not been exercised against the live endpoint — both are configurable so a
 wrong value can be fixed without a rebuild, and failure degrades to "start Claude Code" rather
 than touching the credentials file.
+
+**Credentials only travel over https.** `Endpoint.IsSecure` refuses anything else before the
+request is made, loopback excepted so a local mock stays possible — and the whole poll, token
+refresh included, runs under one deadline, because the shared `HttpClient` has no timeout of its
+own. A host other than the shipped one is *reported* through `ProviderResult.Notice` rather than
+blocked: being able to follow a moved endpoint without a rebuild is the reason `usageUrl` and
+`tokenUrl` are settings at all, so the answer to a foreign host is visibility, not a rule.

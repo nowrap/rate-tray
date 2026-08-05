@@ -91,8 +91,10 @@
   "label.claude.extraUsage": "Extra-Guthaben",
   "note.claude.extraCurrency": "Limit in {0}",
   "label.codex.window": "Codex · {0}",
+  "note.endpoint": "Endpunkt: {0}",
 
   "error.claude.noCredentials": "Keine Claude-Anmeldung gefunden (.credentials.json fehlt)",
+  "error.claude.insecureUrl": "Endpunkt ist nicht https, kein Token gesendet: {0}",
   "error.claude.unreadable": "Anmeldedaten unlesbar: {0}",
   "error.claude.expired": "Token abgelaufen — Claude Code starten (oder autoRefreshToken aktivieren)",
   "error.claude.refreshFailed": "Token-Refresh fehlgeschlagen — Claude Code starten",

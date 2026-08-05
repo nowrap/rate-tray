@@ -123,6 +123,13 @@ public sealed record ProviderResult(string Group, IReadOnlyList<LimitReading> Re
     public AuthStatus? Auth { get; init; }
 
     /// <summary>
+    /// Something about how this poll was made that the numbers do not show — currently a
+    /// configured endpoint other than the one the app ships with. Not an error: it is a
+    /// legitimate setting, and saying so is what keeps it from being an invisible one.
+    /// </summary>
+    public string? Notice { get; init; }
+
+    /// <summary>
     /// How long the server asked us to wait, when it said so. Takes precedence over the
     /// caller's own backoff: a stated delay is better than a guessed one.
     /// </summary>
