@@ -65,15 +65,21 @@ public sealed record LimitReading
 
     public static string FormatWindow(TimeSpan window)
     {
-        if (window.TotalDays >= 7 && window.TotalDays % 7 == 0)
+        // Whole minutes, not fractional days. Testing a double for exact divisibility works
+        // only as long as every provider happens to report a window that divides evenly —
+        // the first one that does not would silently render "7 d" instead of "Week".
+        const long Hour = 60, Day = 24 * Hour, Week = 7 * Day;
+        var minutes = (long)Math.Round(window.TotalMinutes);
+
+        if (minutes >= Week && minutes % Week == 0)
         {
-            var weeks = (int)(window.TotalDays / 7);
+            var weeks = minutes / Week;
             return weeks == 1 ? Loc.T("window.week") : Loc.T("window.weeks", weeks);
         }
 
-        return window.TotalDays >= 1
-            ? Loc.T("window.days", (int)window.TotalDays)
-            : Loc.T("window.hours", (int)window.TotalHours);
+        return minutes >= Day
+            ? Loc.T("window.days", minutes / Day)
+            : Loc.T("window.hours", minutes / Hour);
     }
 }
 

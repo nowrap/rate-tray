@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using RateTray.Configuration;
 using RateTray.Localization;
@@ -483,7 +484,8 @@ public sealed class SettingsForm : Form
             ConfigStore.Save(_config);
             Process.Start(new ProcessStartInfo(ConfigStore.Path_) { UseShellExecute = true });
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is Win32Exception or IOException
+                                      or UnauthorizedAccessException or InvalidOperationException)
         {
             MessageBox.Show(this, Loc.T("dialog.settingsFailed", ex.Message), "RateTray",
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);

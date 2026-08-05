@@ -76,7 +76,7 @@ public sealed class DetailsForm : Form
     private Color Muted => Dark ? Color.FromArgb(154, 160, 170) : Color.FromArgb(107, 114, 128);
     private Color BorderColor => Dark ? Color.FromArgb(58, 61, 69) : Color.FromArgb(214, 219, 228);
 
-    private int Px(int value) => (int)Math.Round(value * _dpi / 96.0);
+    private int Px(int value) => (int)Math.Round(value * (_dpi / 96.0));
 
     /// <param name="nextPoll">
     /// When the next poll is due, drawn as the countdown strip along the bottom edge. Null

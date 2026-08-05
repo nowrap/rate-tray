@@ -64,7 +64,7 @@ public sealed class TooltipWindow : Form
     private Color Muted => Dark ? Color.FromArgb(154, 160, 170) : Color.FromArgb(107, 114, 128);
     private Color BorderColor => Dark ? Color.FromArgb(66, 70, 79) : Color.FromArgb(210, 215, 224);
 
-    private int Px(int value) => (int)Math.Round(value * _dpi / 96.0);
+    private int Px(int value) => (int)Math.Round(value * (_dpi / 96.0));
 
     public void ShowFor(LimitReading? reading, string group, string? error, Point cursor)
     {

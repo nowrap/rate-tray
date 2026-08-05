@@ -88,6 +88,29 @@ public class LimitReadingTests
     }
 
     [Fact]
+    public void A_window_that_is_not_a_whole_number_of_weeks_falls_back_to_days()
+    {
+        // 10080 minutes is exactly a week; one minute more must not be rounded into one.
+        Assert.Equal(Loc.T("window.week"), LimitReading.FormatWindow(TimeSpan.FromMinutes(10080)));
+        Assert.Equal("7 d", LimitReading.FormatWindow(TimeSpan.FromMinutes(10081)));
+    }
+
+    [Fact]
+    public void Week_detection_does_not_rely_on_floating_point_equality()
+    {
+        // Built from minutes rather than days, the way a provider reports it. The old
+        // implementation compared TotalDays % 7 to zero and was one rounding away from
+        // rendering this as "7 d".
+        foreach (var weeks in (int[])[1, 2, 4])
+        {
+            var window = TimeSpan.FromMinutes(weeks * 7 * 24 * 60);
+            var expected = weeks == 1 ? Loc.T("window.week") : Loc.T("window.weeks", weeks);
+
+            Assert.Equal(expected, LimitReading.FormatWindow(window));
+        }
+    }
+
+    [Fact]
     public void Formatting_follows_the_active_language()
     {
         Loc.Use("de");

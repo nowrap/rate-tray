@@ -121,7 +121,10 @@ public sealed class Palette(AppConfig config)
                 _ => fallback,
             };
         }
-        catch (Exception)
+        // Narrow on purpose: these are the only failures Convert can produce here. Catching
+        // everything would turn a bug in this method into a silent "unparseable, using the
+        // fallback" — indistinguishable from a genuinely bad value in the config.
+        catch (Exception ex) when (ex is FormatException or OverflowException or ArgumentException)
         {
             return fallback;
         }
