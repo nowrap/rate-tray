@@ -32,6 +32,13 @@ public static class UsageCache
 
     public static string DefaultPath => Path.Combine(ConfigStore.Directory, "cache.json");
 
+    /// <summary>
+    /// Still worth showing? The same age limit has to apply when a failed poll falls back to the
+    /// last readings that arrived, not only when they are read from disk — an app left running
+    /// for days with one provider down would otherwise keep painting the same numbers.
+    /// </summary>
+    public static bool IsFresh(CachedReadings entry, DateTimeOffset now) => now - entry.FetchedAt <= MaxAge;
+
     /// <summary>Never throws — a missing or corrupt cache simply means starting empty.</summary>
     public static Dictionary<string, CachedReadings> Load(string? path = null)
     {
@@ -44,15 +51,30 @@ public static class UsageCache
                 File.ReadAllText(file), Options);
             if (loaded is null) return [];
 
+            var now = DateTimeOffset.Now;
             return loaded
-                .Where(entry => DateTimeOffset.Now - entry.Value.FetchedAt <= MaxAge)
-                .ToDictionary(entry => entry.Key, entry => entry.Value, StringComparer.OrdinalIgnoreCase);
+                .Select(entry => (entry.Key, Value: Keep(entry.Value)))
+                .Where(entry => entry.Value is { } value && IsFresh(value, now))
+                .ToDictionary(entry => entry.Key, entry => entry.Value!, StringComparer.OrdinalIgnoreCase);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException
                                       or SecurityException or JsonException or NotSupportedException)
         {
             return [];
         }
+    }
+
+    /// <summary>
+    /// Drops what deserialises without complaint but cannot be used: valid JSON such as
+    /// <c>{"Claude": null}</c> or an entry whose readings are null once took the whole start-up
+    /// down, because a <see cref="NullReferenceException"/> is not one of the failures below.
+    /// </summary>
+    private static CachedReadings? Keep(CachedReadings? entry)
+    {
+        if (entry?.Readings is null) return null;
+
+        var readings = entry.Readings.Where(reading => reading is not null).ToList();
+        return readings.Count == 0 ? null : entry with { Readings = readings };
     }
 
     public static void Save(IReadOnlyDictionary<string, CachedReadings> entries, string? path = null)

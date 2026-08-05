@@ -2,6 +2,10 @@ namespace RateTray.Configuration;
 
 public sealed class AppConfig
 {
+    internal const string ThemeDefault = "auto";
+    internal const string LanguageDefault = "auto";
+    internal const string FontDefault = "Segoe UI";
+
     /// <summary>
     /// Poll interval. The windows being watched move in hours and days, so anything under a
     /// minute buys nothing — and the Claude usage endpoint rate-limits, which a tight loop
@@ -10,12 +14,12 @@ public sealed class AppConfig
     public int RefreshSeconds { get; set; } = 90;
 
     /// <summary>auto | light | dark — decides the tray icon's base colour.</summary>
-    public string Theme { get; set; } = "auto";
+    public string Theme { get; set; } = ThemeDefault;
 
     /// <summary>auto | en | de — "auto" follows the Windows UI language.</summary>
-    public string Language { get; set; } = "auto";
+    public string Language { get; set; } = LanguageDefault;
 
-    public string FontFamily { get; set; } = "Segoe UI";
+    public string FontFamily { get; set; } = FontDefault;
 
     /// <summary>
     /// Own hover card with the service mark instead of the native text tooltip. Turn off to
@@ -50,6 +54,39 @@ public sealed class AppConfig
     public NotificationOptions Notifications { get; set; } = new();
     public ClaudeOptions Claude { get; set; } = new();
     public CodexOptions Codex { get; set; } = new();
+
+    /// <summary>
+    /// Makes a hand-edited settings.json safe to use. Syntactically valid JSON still
+    /// deserialises into nulls and absurd numbers — <c>"icons": null</c>, <c>"theme": null</c>,
+    /// <c>"refreshSeconds": 3000000</c> — and each of those used to surface as a crash during
+    /// start-up rather than as a bad setting. One pass here keeps that knowledge in a single
+    /// place instead of a null check at every use, and <see cref="ConfigStore.Load"/> writes the
+    /// repaired file back so the next start is clean.
+    /// </summary>
+    public AppConfig Normalize()
+    {
+        // The floor is the same reason the poll timer has one: the usage endpoint rate-limits.
+        // The ceiling only has to keep seconds * 1000 inside the int the timer takes.
+        RefreshSeconds = Math.Clamp(RefreshSeconds, 30, 86_400);
+        MaxBackoffMinutes = Math.Clamp(MaxBackoffMinutes, 1, 1_440);
+
+        Theme = Sane.Text(Theme, ThemeDefault);
+        Language = Sane.Text(Language, LanguageDefault);
+        FontFamily = Sane.Text(FontFamily, FontDefault);
+
+        // A null id would throw on the first comparison in the icons menu.
+        Icons = Icons is null
+            ? []
+            : Icons.Where(id => !string.IsNullOrWhiteSpace(id)).Select(id => id.Trim()).ToList();
+
+        Colors = (Colors ?? new()).Normalize();
+        Thresholds = (Thresholds ?? new()).Normalize();
+        Notifications = (Notifications ?? new()).Normalize();
+        Claude = (Claude ?? new()).Normalize();
+        Codex = (Codex ?? new()).Normalize();
+
+        return this;
+    }
 }
 
 public sealed class ThresholdOptions
@@ -59,6 +96,18 @@ public sealed class ThresholdOptions
 
     /// <summary>At or above this percentage the value turns red.</summary>
     public int Critical { get; set; } = 90;
+
+    /// <summary>
+    /// Clamped, not reordered: warn above critical is a strange setting but a legible one —
+    /// every value simply turns red a step earlier. Silently swapping the two would overrule
+    /// someone who meant it.
+    /// </summary>
+    internal ThresholdOptions Normalize()
+    {
+        Warn = Math.Clamp(Warn, 0, 100);
+        Critical = Math.Clamp(Critical, 0, 100);
+        return this;
+    }
 }
 
 /// <summary>
@@ -68,11 +117,15 @@ public sealed class ThresholdOptions
 /// </summary>
 public sealed class ColorOptions
 {
+    internal const string ClaudeDefault = "#D97757";
+    internal const string CodexDefault = "#10A37F";
+    internal const double ShadeSpreadDefault = 0.15;
+
     /// <summary>Claude's terracotta accent.</summary>
-    public string Claude { get; set; } = "#D97757";
+    public string Claude { get; set; } = ClaudeDefault;
 
     /// <summary>OpenAI's green accent.</summary>
-    public string Codex { get; set; } = "#10A37F";
+    public string Codex { get; set; } = CodexDefault;
 
     /// <summary>
     /// Hue of the warning colour in degrees (48 = amber). The colour itself is built from this
@@ -101,7 +154,23 @@ public sealed class ColorOptions
     /// Kept modest on purpose: wide enough to tell three tray icons apart at a glance, narrow
     /// enough that the last shade still reads as the service's colour rather than a pale tint.
     /// </summary>
-    public double ShadeSpread { get; set; } = 0.15;
+    public double ShadeSpread { get; set; } = ShadeSpreadDefault;
+
+    internal ColorOptions Normalize()
+    {
+        Claude = Sane.Text(Claude, ClaudeDefault);
+        Codex = Sane.Text(Codex, CodexDefault);
+        WarnHue = Math.Clamp(WarnHue, 0, 359);
+        CriticalHue = Math.Clamp(CriticalHue, 0, 359);
+
+        // Null means "derive it", so only blanks and non-numbers are corrected here.
+        Warn = Sane.Optional(Warn);
+        Critical = Sane.Optional(Critical);
+        Unknown = Sane.Optional(Unknown);
+        ShadeSpread = double.IsFinite(ShadeSpread) ? Math.Clamp(ShadeSpread, 0, 1) : ShadeSpreadDefault;
+
+        return this;
+    }
 }
 
 public sealed class NotificationOptions
@@ -110,16 +179,26 @@ public sealed class NotificationOptions
 
     /// <summary>Toast fires once per window when usage crosses this percentage.</summary>
     public int AtPercent { get; set; } = 80;
+
+    internal NotificationOptions Normalize()
+    {
+        AtPercent = Math.Clamp(AtPercent, 0, 100);
+        return this;
+    }
 }
 
 public sealed class ClaudeOptions
 {
+    internal const string UsageUrlDefault = "https://api.anthropic.com/api/oauth/usage";
+    internal const string TokenUrlDefault = "https://console.anthropic.com/v1/oauth/token";
+    internal const string ClientIdDefault = "9d1c250a-e61b-44d9-88ed-5944d1962f5e";
+
     public bool Enabled { get; set; } = true;
 
     /// <summary>Defaults to %USERPROFILE%\.claude\.credentials.json.</summary>
     public string? CredentialsPath { get; set; }
 
-    public string UsageUrl { get; set; } = "https://api.anthropic.com/api/oauth/usage";
+    public string UsageUrl { get; set; } = UsageUrlDefault;
 
     /// <summary>How long to wait for the usage endpoint before giving up on a poll.</summary>
     public int TimeoutSeconds { get; set; } = 20;
@@ -131,10 +210,20 @@ public sealed class ClaudeOptions
     /// </summary>
     public bool AutoRefreshToken { get; set; }
 
-    public string TokenUrl { get; set; } = "https://console.anthropic.com/v1/oauth/token";
+    public string TokenUrl { get; set; } = TokenUrlDefault;
 
     /// <summary>Configurable so a changed client id can be fixed without a rebuild.</summary>
-    public string ClientId { get; set; } = "9d1c250a-e61b-44d9-88ed-5944d1962f5e";
+    public string ClientId { get; set; } = ClientIdDefault;
+
+    internal ClaudeOptions Normalize()
+    {
+        CredentialsPath = Sane.Optional(CredentialsPath);
+        UsageUrl = Sane.Text(UsageUrl, UsageUrlDefault);
+        TokenUrl = Sane.Text(TokenUrl, TokenUrlDefault);
+        ClientId = Sane.Text(ClientId, ClientIdDefault);
+        TimeoutSeconds = Math.Clamp(TimeoutSeconds, 5, 300);
+        return this;
+    }
 }
 
 public sealed class CodexOptions
@@ -145,4 +234,26 @@ public sealed class CodexOptions
     public string? ExecutablePath { get; set; }
 
     public int TimeoutSeconds { get; set; } = 30;
+
+    internal CodexOptions Normalize()
+    {
+        ExecutablePath = Sane.Optional(ExecutablePath);
+        TimeoutSeconds = Math.Clamp(TimeoutSeconds, 5, 300);
+        return this;
+    }
+}
+
+/// <summary>
+/// The two string repairs every <c>Normalize</c> above needs. Deliberately file-local: this is
+/// about surviving a hand-edited file, not an API anything else should reach for.
+/// </summary>
+file static class Sane
+{
+    /// <summary>A blank value means the setting was never really set, so the default applies.</summary>
+    public static string Text(string? value, string fallback) =>
+        string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
+
+    /// <summary>For settings where null is meaningful — blank collapses to it rather than past it.</summary>
+    public static string? Optional(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

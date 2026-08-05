@@ -228,11 +228,11 @@ colours, thresholds, licence — and tested the running app.
 
 What that means for you as a reader:
 
-- There are 157 unit tests and 9 end-to-end tests, all passing, and the app has been run
+- There are 177 unit tests and 9 end-to-end tests, all passing, and the app has been run
   against live Claude and Codex accounts.
 - **It has had no independent human code review.** It reads your credential files, so read
-  [SECURITY.md](SECURITY.md) — it states exactly which files are touched and the single
-  address anything is ever sent to — and skim the code before you trust it.
+  [SECURITY.md](SECURITY.md) — it states exactly which files are touched and where anything is
+  ever sent — and skim the code before you trust it.
 - Several bugs were caught by watching the app misbehave rather than by reasoning about the
   code. The [changelog](CHANGELOG.md) and commit messages say so plainly.
 

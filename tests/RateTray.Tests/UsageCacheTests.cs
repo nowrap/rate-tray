@@ -120,6 +120,48 @@ public class UsageCacheTests : IDisposable
     }
 
     [Fact]
+    public void A_null_entry_is_dropped_instead_of_taking_the_start_up_down()
+    {
+        // Valid JSON, semantically empty: it deserialises without complaint, and the
+        // NullReferenceException that followed is not one of the failures Load may swallow.
+        File.WriteAllText(_path, """{ "Claude": null }""");
+
+        Assert.Empty(UsageCache.Load(_path));
+    }
+
+    [Fact]
+    public void An_entry_without_readings_is_dropped()
+    {
+        var stamp = DateTimeOffset.Now.ToString("o");
+        File.WriteAllText(_path, $$"""{ "Claude": { "fetchedAt": "{{stamp}}", "readings": null } }""");
+
+        Assert.Empty(UsageCache.Load(_path));
+    }
+
+    [Fact]
+    public void A_null_reading_does_not_travel_with_the_ones_that_are_real()
+    {
+        var stamp = DateTimeOffset.Now.ToString("o");
+        File.WriteAllText(_path, $$"""
+            { "Claude": { "fetchedAt": "{{stamp}}", "readings": [ null,
+              { "id": "claude.session", "label": "Session", "group": "Claude", "percent": 8 } ] } }
+            """);
+
+        Assert.Equal("claude.session", Assert.Single(UsageCache.Load(_path)["Claude"].Readings).Id);
+    }
+
+    [Fact]
+    public void Freshness_is_the_same_question_when_a_failed_poll_falls_back()
+    {
+        var stale = new CachedReadings(DateTimeOffset.Now.AddDays(-3), [Reading("claude.session", 8)]);
+
+        // The two-day limit used to apply only on load, so an app left running for days with a
+        // provider down kept restoring the same numbers no restart would have shown.
+        Assert.False(UsageCache.IsFresh(stale, DateTimeOffset.Now));
+        Assert.True(UsageCache.IsFresh(stale with { FetchedAt = DateTimeOffset.Now.AddHours(-5) }, DateTimeOffset.Now));
+    }
+
+    [Fact]
     public void Saving_to_an_unwritable_path_is_survivable()
     {
         var directory = Path.Combine(Path.GetTempPath(), $"tbm-{Guid.NewGuid():N}");

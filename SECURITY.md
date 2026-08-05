@@ -22,8 +22,15 @@ or to its diagnostic output.
 
 **Network**
 
-Exactly one destination: `https://api.anthropic.com/api/oauth/usage`, and only when Claude is
-enabled. The Claude token is sent there and nowhere else.
+One destination as shipped: `https://api.anthropic.com/api/oauth/usage`, and only when Claude is
+enabled. That is where the Claude token goes, and nowhere else.
+
+It is a setting rather than a constant, though, as is `claude.tokenUrl` for the refresh described
+below — both so a changed endpoint can be corrected without a rebuild. So the honest version of
+the sentence above is: whoever can write `settings.json` can point the token somewhere else.
+Locally that grants nothing new, since the same access reads `.credentials.json` directly. It does
+mean a settings file taken from someone else deserves a read before it is used, like any config
+carrying a URL.
 
 Codex data does not involve the network at all from this app's side — it starts a local
 `codex app-server` process and speaks JSON-RPC to it over stdio. Whatever that process does
