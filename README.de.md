@@ -21,12 +21,13 @@ Linksklick auf ein beliebiges Icon öffnet das Detail-Fenster:
 
 ## Wozu
 
-Die Zahl gibt es längst — sie ist nur umständlich zu erreichen. Bei Claude ist die Anzeige
-zurück in die Einstellungen gewandert, bei ChatGPT lag sie immer dort, und nachsehen heißt in
-beiden Fällen: raus aus dem, was man gerade tut. Die CLIs zeigen sie auch, aber nur innerhalb
-einer laufenden Sitzung (`/usage` in Claude Code, `/status` in Codex). Hier stehen dieselben Zahlen dort, wo man
-sie sieht, ohne etwas zu unterbrechen — und warnen, bevor man mitten in einer Aufgabe
-anschlägt.
+Die Zahl gibt es längst — sie ist nur umständlich zu erreichen. Sie steht in den Web-Apps, also
+ein ganzes Fenster weiter, wenn man die in einer Webview-Hülle wie Rambox geparkt hat, und dort
+dann vergraben: Bei Claude ist die Anzeige zurück in die Einstellungen gewandert, bei ChatGPT lag
+sie immer darin. So oder so heißt nachsehen: raus aus dem, was man gerade tut. Die CLIs zeigen
+sie auch, aber nur innerhalb einer laufenden Sitzung (`/usage` in Claude Code, `/status` in
+Codex). Hier stehen dieselben Zahlen dort, wo man sie sieht, ohne etwas zu unterbrechen — und
+warnen, bevor man mitten in einer Aufgabe anschlägt.
 
 Die Werte sind **Live-Abfragen der offiziellen Limits**, keine Schätzung aus lokalen
 Transcript-Dateien. Der Abruf kostet keine Modell-Token.
