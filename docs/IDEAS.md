@@ -13,16 +13,24 @@ same job for far more providers — Codex, Claude, Cursor, Gemini, Copilot, Bedr
 LiteLLM and others. MIT licensed, ~20k stars, actively maintained, and it ships a CLI with
 macOS **and Linux** builds (Homebrew tap, Arch AUR `codexbar-cli`).
 
-That settles two of the three directions below, and they are kept only for the reasoning:
+That settles the cross-platform directions below, which are kept only for the reasoning:
 
 - **A macOS shell is not worth building.** Reimplementing a mature MIT project with broader
   coverage would help nobody.
 - **The Linux status-line idea is largely served too.** `codexbar-cli` is exactly the "print one
   short line" command that tmux, starship and waybar want.
 
-What remains genuinely uncovered is **Windows** — CodexBar has no tray app there, and since it
-is written in Swift, a Windows shell is not a natural contribution to it either. A separate
-.NET implementation is the reasonable answer, which is what this project is.
+**Windows is covered too**, which was missed when this section was first written and is
+corrected here rather than quietly deleted: [Win-CodexBar](https://github.com/nesszer/Win-CodexBar)
+is a Windows tray app in Rust and Tauri, 56 providers, browser cookie import, DPAPI credential
+storage, an installer, a winget package, and roughly 900 stars. The claim that RateTray existed
+because no Windows counterpart did was simply wrong, and it had been published.
+
+What is actually different is the approach, not the platform. Those are the deluxe version:
+dashboards, dozens of providers, panels to open. RateTray keeps Core Temp's idea — the value is
+drawn into the tray icon itself, so nothing has to be opened or clicked. 345 KB against 28 MB,
+two services against 56. Whether that is worth having is a fair question; it is at least a
+different question from "does anything else exist".
 
 Being MIT, it is also a legitimate reference for how other providers expose their limits, if
 this ever grows beyond two.

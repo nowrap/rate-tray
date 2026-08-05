@@ -21,8 +21,10 @@ Linksklick auf ein beliebiges Icon öffnet das Detail-Fenster:
 
 ## Wozu
 
-Beide CLIs können das verbleibende Kontingent anzeigen, aber nur innerhalb einer laufenden
-Sitzung (`/usage` in Claude Code, `/status` in Codex). Hier stehen dieselben Zahlen dort, wo man
+Die Zahl gibt es längst — sie ist nur umständlich zu erreichen. Bei Claude ist die Anzeige
+zurück in die Einstellungen gewandert, bei ChatGPT lag sie immer dort, und nachsehen heißt in
+beiden Fällen: raus aus dem, was man gerade tut. Die CLIs zeigen sie auch, aber nur innerhalb
+einer laufenden Sitzung (`/usage` in Claude Code, `/status` in Codex). Hier stehen dieselben Zahlen dort, wo man
 sie sieht, ohne etwas zu unterbrechen — und warnen, bevor man mitten in einer Aufgabe
 anschlägt.
 
@@ -200,9 +202,18 @@ Die Idee ist von [Core Temp](https://www.alcpu.com/CoreTemp/) abgeschaut, das se
 CPU-Temperaturen pro Kern als Zahlen in den Infobereich schreibt. RateTray macht dasselbe für
 eine andere Art von Kontingent.
 
-**Auf macOS?** Dort ist [CodexBar](https://github.com/steipete/CodexBar) die bessere Wahl — ein
-Menüleisten-Programm mit weit mehr Anbietern, MIT-lizenziert, samt Linux-CLI. RateTray gibt es,
-weil es dazu kein Windows-Gegenstück gibt.
+## Alternativen
+
+Beide können deutlich mehr als RateTray und verdienen den ersten Blick:
+
+- [CodexBar](https://github.com/steipete/CodexBar) — macOS-Menüleiste, über 60 Anbieter, dazu
+  eine CLI für macOS und Linux.
+- [Win-CodexBar](https://github.com/nesszer/Win-CodexBar) — Windows-Tray, 56 Anbieter,
+  Browser-Cookie-Import, DPAPI-Ablage, Installer und winget-Paket.
+
+Das sind die Deluxe-Varianten, und wer ein Dashboard möchte, ist dort richtig. RateTray verfolgt
+stattdessen den Core-Temp-Ansatz: Der Wert wird ins Icon selbst gezeichnet, es gibt also nichts
+zu öffnen und nichts zu klicken. 345 KB, zwei Dienste, eine Idee.
 
 ## Marken
 

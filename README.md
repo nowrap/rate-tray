@@ -21,8 +21,10 @@ Left-click any icon for the details panel:
 
 ## Why
 
-Both CLIs can show your remaining quota, but only inside an interactive session (`/usage` in
-Claude Code, `/status` in Codex). This puts the same numbers where you can see them without
+The number already exists — it is just tedious to reach. Claude moved usage back into settings,
+ChatGPT's was always buried there, and checking either means leaving what you were doing. Both
+CLIs can also show it, but only inside an interactive session (`/usage` in Claude Code,
+`/status` in Codex). This puts the same numbers where you can see them without
 interrupting anything, and warns you before you hit a wall mid-task.
 
 The values are **live server-side readings of the official limits**, not estimates
@@ -193,9 +195,18 @@ The idea is lifted from [Core Temp](https://www.alcpu.com/CoreTemp/), which has 
 per-core CPU temperatures as numbers in the notification area for years. RateTray does the same
 thing for a different kind of budget.
 
-**On macOS?** Use [CodexBar](https://github.com/steipete/CodexBar) instead — a menu bar app
-covering far more providers, MIT licensed, and it ships a Linux CLI too. RateTray exists because
-it has no Windows counterpart.
+## Alternatives
+
+Both of these do far more than RateTray and are worth your attention first:
+
+- [CodexBar](https://github.com/steipete/CodexBar) — macOS menu bar, 60+ providers, and a CLI
+  for macOS and Linux.
+- [Win-CodexBar](https://github.com/nesszer/Win-CodexBar) — Windows tray, 56 providers, browser
+  cookie import, DPAPI credential storage, an installer, and a winget package.
+
+Those are the deluxe version, and if you want a dashboard that is what you want. RateTray takes
+the Core Temp approach instead: the value is drawn into the icon itself, so there is nothing to
+open and nothing to click. 345 KB, two services, one idea.
 
 ## Trademarks
 
