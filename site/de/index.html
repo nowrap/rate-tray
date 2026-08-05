@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RateTray — Live-Auslastung von Claude Code und Codex im Windows-Infobereich</title>
+<meta name="description" content="Ein Windows-Tray-Werkzeug, das zeigt, wie viel deines Claude-Code- und Codex-Kontingents noch übrig ist. Ein Icon pro Limit, so wie Core Temp die CPU-Werte pro Kern anzeigt. Kostenlos und MIT-lizenziert.">
+<link rel="canonical" href="https://ratetray.nowrap.net/de/">
+<link rel="alternate" hreflang="en" href="https://ratetray.nowrap.net/">
+<link rel="alternate" hreflang="de" href="https://ratetray.nowrap.net/de/">
+<link rel="alternate" hreflang="x-default" href="https://ratetray.nowrap.net/">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ratetray.nowrap.net/de/">
+<meta property="og:site_name" content="RateTray">
+<meta property="og:locale" content="de_DE">
+<meta property="og:title" content="RateTray — Live-Auslastung von Claude Code und Codex">
+<meta property="og:description" content="Sieh ein Limit kommen, bevor es dich mitten in der Arbeit stoppt. Ein Tray-Icon pro Limit, direkt von den Diensten gelesen. 345 KB, MIT, keine Telemetrie.">
+<meta property="og:image" content="https://ratetray.nowrap.net/social.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="RateTray: vier Tray-Icons mit 34, 81, 22 und 61 Prozent, die 81 in Amber, weil sie die Warnschwelle überschritten hat.">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="RateTray — Live-Auslastung von Claude Code und Codex">
+<meta name="twitter:description" content="Sieh ein Limit kommen, bevor es dich mitten in der Arbeit stoppt. Ein Tray-Icon pro Limit, direkt von den Diensten gelesen. 345 KB, MIT, keine Telemetrie.">
+<meta name="twitter:image" content="https://ratetray.nowrap.net/social.png">
+
+<link rel="icon" href="../favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<meta name="theme-color" content="#14161A" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#FBFBFC" media="(prefers-color-scheme: light)">
+
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<header class="wrap topbar">
+  <span class="wordmark">RateTray</span>
+  <nav>
+    <a href="#how">Funktionsweise</a>
+    <a href="#install">Installation</a>
+    <a href="https://github.com/nowrap/rate-tray">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      Quellcode
+    </a>
+    <a href="../" hreflang="en" class="lang">EN</a>
+  </nav>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <h1>Live-Auslastung von Claude&nbsp;Code und Codex, im Windows-Infobereich.</h1>
+    <p class="sub">
+      <strong style="font-weight: 600;">Sieh ein Limit kommen, bevor es dich mitten in der Arbeit stoppt.</strong>
+      Ein Icon pro Limit, gezeichnet wie Core&nbsp;Temp die CPU-Werte pro Kern anzeigt — direkt bei
+      den Diensten gelesen, also keine Schätzung, und der Abruf kostet keine Modell-Token.
+    </p>
+
+    <ul class="facts label">
+      <li>345&nbsp;KB, eine Datei</li>
+      <li>MIT, quelloffen</li>
+      <li>Keine Telemetrie, eine Gegenstelle</li>
+      <li>Claude&nbsp;Code + Codex</li>
+    </ul>
+
+    <figure class="specimen">
+      <div class="stage">
+      <div class="hovercard" id="card">
+        <div class="row">
+          <span class="mark" id="card-mark"></span>
+          <span class="name" id="card-name"></span>
+          <span class="value" id="card-value"></span>
+        </div>
+        <div class="reset" id="card-reset"></div>
+      </div>
+      <div class="taskbar" id="tray">
+        <span class="chevron" aria-hidden="true">&#94;</span>
+        <span class="ours">
+          <span class="tray-icon" tabindex="0" data-target="34" data-service="claude" data-shade="0"
+                data-name="Session (5 h)" data-reset="Reset in 2 h 23 min">0</span>
+          <span class="tray-icon" tabindex="0" data-target="81" data-service="claude" data-shade="1"
+                data-name="Woche &#183; Alle Modelle" data-reset="Reset in 4 d 4 h">0</span>
+          <span class="tray-icon" tabindex="0" data-target="22" data-service="claude" data-shade="2"
+                data-name="Woche &#183; Fable" data-reset="Reset in 4 d 4 h">0</span>
+          <span class="tray-icon" tabindex="0" data-target="61" data-service="codex"  data-shade="0"
+                data-name="Codex &#183; Woche" data-reset="Reset in 5 d 7 h">0</span>
+        </span>
+        <span class="kbd">DEU</span>
+        <span class="glyph">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3">
+            <path d="M1.5 5.5a9 9 0 0 1 13 0M4 8.4a5.5 5.5 0 0 1 8 0"/><circle cx="8" cy="12" r="1.1" fill="currentColor" stroke="none"/>
+          </svg>
+        </span>
+        <span class="glyph">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3">
+            <path d="M8.5 3 5 6H2.5v4H5l3.5 3z" stroke-linejoin="round"/><path d="M11 6a3.6 3.6 0 0 1 0 4"/>
+          </svg>
+        </span>
+        <span class="clock" aria-hidden="true">21:32<br>05.08.2026</span>
+      </div>
+      </div>
+      <figcaption>
+        <span class="label">24&nbsp;px — die Größe, in der Windows zeichnet</span>
+        <span class="label">Zeiger auf eine Zahl für die Karte</span>
+      </figcaption>
+    </figure>
+
+    <div class="actions">
+      <a class="btn" href="https://github.com/nowrap/rate-tray/releases/latest">Herunterladen</a>
+      <a class="btn secondary" href="https://github.com/nowrap/rate-tray">Quellcode ansehen</a>
+    </div>
+    <p class="requirement">
+      Windows 10 oder 11 und die
+      <a href="https://dotnet.microsoft.com/download/dotnet/9.0">.NET&nbsp;9 Desktop Runtime</a>
+      — nicht mitgeliefert, also vorher installieren, falls sie fehlt.
+    </p>
+  </div>
+
+  <section id="colour">
+    <div class="wrap">
+      <span class="label">Die Farbe ist die Oberfläche</span>
+      <h2>Drei Regeln, mehr gibt es nicht zu lernen</h2>
+      <p class="muted">
+        Sieh der zweiten Zahl oben zu, wie sie über 75 klettert. Unterhalb der Warnschwelle trägt
+        ein Wert die Farbe seines Dienstes, abgestuft gegen die übrigen Limits desselben Dienstes.
+        Darüber übernimmt die Dringlichkeit für alles — eine Warnung hängt also nie davon ab, ob
+        man weiß, welche Farbe zu welchem Dienst gehört.
+      </p>
+      <p class="muted">
+        Farbe ist der zweite Kanal, nie der einzige: Der Prozentwert steht immer im Icon, die
+        Hover-Karte benennt das Limit, und beide Schwellen kannst du verschieben.
+      </p>
+
+      <div class="rules" style="margin-top: 2rem;">
+        <div class="rule">
+          <div class="meters">
+            <div class="meter" data-target="34" data-service="claude" data-shade="0" role="img">
+              <div class="swatch"><span class="num">0</span><span class="unit">%</span></div>
+              <div class="track"><span></span></div>
+            </div>
+            <div class="meter" data-target="61" data-service="codex" data-shade="0" role="img">
+              <div class="swatch"><span class="num">0</span><span class="unit">%</span></div>
+              <div class="track"><span></span></div>
+            </div>
+          </div>
+          <span class="label">Unter 75%</span>
+          <p>Dienstfarbe. Terracotta für Claude, Grün für Codex — daran unterscheidet man die Icons auf einen Blick.</p>
+        </div>
+        <div class="rule">
+          <div class="meters">
+            <div class="meter" data-target="81" data-service="claude" data-shade="1" role="img">
+              <div class="swatch"><span class="num">0</span><span class="unit">%</span></div>
+              <div class="track"><span></span></div>
+            </div>
+          </div>
+          <span class="label">Ab 75%</span>
+          <p>Amber, für jeden Dienst und jedes Limit. Eine Farbe, eine Bedeutung.</p>
+        </div>
+        <div class="rule">
+          <div class="meters">
+            <div class="meter" data-target="93" data-service="codex" data-shade="0" role="img">
+              <div class="swatch"><span class="num">0</span><span class="unit">%</span></div>
+              <div class="track"><span></span></div>
+            </div>
+          </div>
+          <span class="label">Ab 90%</span>
+          <p>Karmesin. Beide Schwellen sind einstellbar, die zwei Dienstfarben ebenso.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="wrap split">
+      <figure>
+        <img src="../details.de.png" alt="Das Detail-Fenster mit drei Claude-Limits und einem Codex-Limit, je mit Fortschrittsbalken, Reset-Zeit und der verbleibenden Gültigkeit der Anmeldung." width="840" height="507" loading="lazy">
+        <figcaption class="label">Linksklick auf ein beliebiges Icon</figcaption>
+      </figure>
+      <div>
+        <span class="label">Woher die Zahlen kommen</span>
+        <h2>Bei den Diensten gelesen, nicht geschätzt</h2>
+        <table class="sources">
+          <tr>
+            <th>Claude</th>
+            <td>Der OAuth-Usage-Endpunkt, mit dem Token, den Claude&nbsp;Code ohnehin auf der Platte hält.</td>
+          </tr>
+          <tr>
+            <th>Codex</th>
+            <td><code>codex app-server</code> über JSON-RPC, auf dem Rechner, ohne eigenen Netzaufruf.</td>
+          </tr>
+        </table>
+        <p class="note" style="margin-top: 1.5rem;">
+          Welche Limits es gibt, hängt vom Tarif ab — die Icon-Auswahl wird deshalb beim ersten
+          Start aus deinem Konto ermittelt statt fest einprogrammiert. Ein fehlgeschlagener Abruf
+          lässt die letzten Zahlen stehen und stellt den Dienst zurück, statt den Tray zu leeren.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="settings">
+    <div class="wrap">
+      <span class="label">Einstellungen</span>
+      <h2>Alles einstellbar, nichts nötig</h2>
+      <p class="muted">
+        Rechtsklick → <em>Einstellungen öffnen</em>. Der Farben-Reiter zeigt beim Ändern eine
+        Live-Vorschau der echten Tray-Icons, abgeleitete Palette inklusive.
+      </p>
+      <div class="shots">
+        <figure><img src="../settings.de.png" alt="Einstellungen, Reiter Allgemein" width="700" height="590" loading="lazy"></figure>
+        <figure><img src="../settings-colors.de.png" alt="Einstellungen, Reiter Farben mit Live-Vorschau der Tray-Icons" width="700" height="590" loading="lazy"></figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="install">
+    <div class="wrap split">
+      <div>
+        <span class="label">Installation</span>
+        <h2>Eine Datei, kein Installer</h2>
+        <p class="muted">
+          <code style="font-family: var(--mono); font-size: 0.86em;">RateTray.exe</code> herunterladen
+          und starten. Zu jedem Release liegt eine SHA-256-Prüfsumme neben der Datei.
+        </p>
+        <p class="muted">
+          Windows&nbsp;11 blendet neue Infobereich-Symbole hinter dem Pfeil
+          <span aria-hidden="true">^</span> aus, bis man sie auf die Taskleiste zieht. Darüber
+          stolpert fast jeder einmal.
+        </p>
+        <div class="actions">
+          <a class="btn" href="https://github.com/nowrap/rate-tray/releases/latest">Aktuelles Release</a>
+        </div>
+      </div>
+      <div>
+        <span class="label">Voraussetzungen</span>
+        <dl class="spec" style="margin-top: 1.4rem;">
+          <dt>System</dt><dd>Windows 10 oder 11</dd>
+          <dt>Laufzeitumgebung</dt><dd><a href="https://dotnet.microsoft.com/download/dotnet/9.0">.NET 9 Desktop Runtime</a></dd>
+          <dt>Angemeldet bei</dt><dd>Claude Code, Codex oder beidem</dd>
+          <dt>Lizenz</dt><dd><a href="https://github.com/nowrap/rate-tray/blob/main/LICENSE">MIT</a></dd>
+          <dt>Sprachen</dt><dd>Deutsch, Englisch</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section id="privacy">
+    <div class="wrap">
+      <span class="label">Was es anfasst</span>
+      <h2>Zwei Dateien gelesen, eine Gegenstelle kontaktiert</h2>
+      <p class="muted">
+        Anmeldedaten werden aus den Dateien gelesen, die die offiziellen CLIs ohnehin pflegen, und
+        niemals kopiert, protokolliert oder anderswohin gesendet. Einziges Ziel ist der
+        Usage-Endpunkt von Anthropic; Codex-Daten verlassen deinen Rechner nie. Es gibt keine
+        Telemetrie und keine Update-Abfrage.
+      </p>
+      <p class="muted">
+        Das solltest du nicht einfach glauben. Das Programm liest deine Anmeldedateien, und
+        geschrieben hat es ein KI-Agent unter menschlicher Anleitung, ohne unabhängiges Review —
+        eine Kombination, der gegenüber Skepsis angebracht ist. Genau darin liegt der Nutzen von
+        345&nbsp;KB und 3.600 Zeilen C#: klein genug, um es vor dem Ausführen selbst zu lesen.
+      </p>
+      <p><a href="https://github.com/nowrap/rate-tray/blob/main/SECURITY.md">Nachlesen, was genau gelesen und geschrieben wird →</a></p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="links">
+      <a href="https://github.com/nowrap/rate-tray">GitHub</a>
+      <a href="https://github.com/nowrap/rate-tray/releases">Releases</a>
+      <a href="https://github.com/nowrap/rate-tray/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="../">English</a>
+    </div>
+    <p>
+      Die Idee ist von <a href="https://www.alcpu.com/CoreTemp/">Core&nbsp;Temp</a> abgeschaut, das
+      seit Jahren CPU-Temperaturen pro Kern als Zahlen in den Infobereich schreibt.
+      <a href="https://github.com/steipete/CodexBar">CodexBar</a> für macOS und
+      <a href="https://github.com/nesszer/Win-CodexBar">Win-CodexBar</a> für Windows sind die
+      Deluxe-Varianten derselben Idee — dutzende Anbieter, Dashboards, Installer. Wer das möchte,
+      nimmt eines davon. RateTray bleibt beim Core-Temp-Ansatz: Der Wert steht im Icon, es gibt
+      nichts zu öffnen. Entstanden ist es als spontanes Experiment; die beiden anderen sind erst
+      später zufällig aufgetaucht.
+    </p>
+    <p>
+      Geschrieben von Claude&nbsp;Code (Claude&nbsp;Opus&nbsp;5) unter menschlicher Anleitung und
+      ohne unabhängiges menschliches Review. Es liest deine Anmeldedateien — bitte lies
+      <a href="https://github.com/nowrap/rate-tray/blob/main/SECURITY.md">SECURITY.md</a> und
+      überflieg den Quellcode, bevor du ihm vertraust.
+    </p>
+    <p class="label" style="margin-top: 1.5rem;">
+      MIT · © 2026 nowrap · Keine Verbindung zu Anthropic oder OpenAI
+    </p>
+  </div>
+</footer>
+
+<script src="../app.js" defer></script>
+</body>
+</html>

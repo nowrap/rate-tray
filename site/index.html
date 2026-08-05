@@ -6,6 +6,9 @@
 <title>RateTray — live usage limits for Claude Code and Codex, in the Windows tray</title>
 <meta name="description" content="A Windows tray indicator showing how much of your Claude Code and Codex quota is left. One icon per limit, the way Core Temp shows per-core CPU values. Free and MIT licensed.">
 <link rel="canonical" href="https://ratetray.nowrap.net/">
+<link rel="alternate" hreflang="en" href="https://ratetray.nowrap.net/">
+<link rel="alternate" hreflang="de" href="https://ratetray.nowrap.net/de/">
+<link rel="alternate" hreflang="x-default" href="https://ratetray.nowrap.net/">
 
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ratetray.nowrap.net/">
@@ -27,301 +30,7 @@
 <meta name="theme-color" content="#14161A" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#FBFBFC" media="(prefers-color-scheme: light)">
 
-<style>
-/* ---------------------------------------------------------------- tokens --
-   Ground and panel are the details window's own colours. Terracotta and green
-   are reserved for data: never a button, never a link. Colour means something
-   here, exactly as it does in the app. */
-:root {
-  color-scheme: dark light;
-
-  --ink:    #14161A;
-  --panel:  #1F2126;
-  --raised: #24272E;
-  --line:   #2E323A;
-  --text:   #ECEEF2;
-  --muted:  #8B929E;
-  --faint:  #656B77;
-
-  --claude: #D97757;
-  --codex:  #10A37F;
-  --warn:   #E8B23C;
-  --crit:   #E05A56;
-
-  --sans: "Segoe UI Variable Display", "Segoe UI", -apple-system, system-ui, sans-serif;
-  --mono: "Cascadia Code", "Cascadia Mono", Consolas, ui-monospace, "SF Mono", monospace;
-
-  --gutter: clamp(1.25rem, 5vw, 4rem);
-  --rule: 1px solid var(--line);
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    --ink:    #FBFBFC;
-    --panel:  #FFFFFF;
-    --raised: #F3F4F6;
-    --line:   #DFE2E8;
-    --text:   #16181D;
-    --muted:  #5A616D;
-    --faint:  #878E9A;
-
-    --claude: #B3542F;
-    --codex:  #0A7C60;
-    --warn:   #9A6B00;
-    --crit:   #B3352F;
-  }
-}
-
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  background: var(--ink);
-  color: var(--text);
-  font-family: var(--sans);
-  font-size: 17px;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-}
-
-a { color: inherit; text-decoration-color: var(--faint); text-underline-offset: 3px; }
-a:hover { text-decoration-color: currentColor; }
-:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; border-radius: 2px; }
-
-/* Datasheet annotation register: small, wide, uppercase, monospace. */
-.label {
-  font-family: var(--mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--faint);
-}
-
-.wrap { max-width: 62rem; margin: 0 auto; padding-inline: var(--gutter); }
-
-/* ------------------------------------------------------------------- bar -- */
-.topbar {
-  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-  padding-block: 1.1rem;
-  border-bottom: var(--rule);
-}
-.wordmark {
-  font-family: var(--mono);
-  font-size: 0.82rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  font-weight: 600;
-}
-.topbar nav { display: flex; align-items: center; gap: 1.4rem; }
-.topbar nav a {
-  display: inline-flex; align-items: center; gap: 0.45rem;
-  font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em;
-  text-decoration: none; color: var(--muted);
-}
-.topbar nav a:hover { color: var(--text); }
-.topbar nav svg { display: block; flex: none; }
-
-/* ----------------------------------------------------------------- hero -- */
-.hero { padding-block: clamp(3rem, 9vw, 6rem) clamp(2.5rem, 6vw, 4rem); }
-
-.hero h1 {
-  margin: 0;
-  font-size: clamp(2rem, 5.4vw, 3.3rem);
-  font-weight: 600;
-  line-height: 1.08;
-  letter-spacing: -0.03em;
-  max-width: 18ch;
-}
-.hero .sub {
-  margin: 1.4rem 0 0;
-  max-width: 46ch;
-  color: var(--muted);
-  font-size: 1.02rem;
-}
-
-/* ------------------------------------------------------- tray specimen --
-   Always dark: this is a specimen of the product on its native surface, so it
-   does not follow the page theme. Icons are 24 px, the size Windows draws them
-   at 150% scaling. */
-.specimen {
-  margin-top: clamp(2rem, 5vw, 3rem);
-  border: var(--rule);
-  border-radius: 3px;
-  overflow: hidden;
-  background: var(--panel);
-}
-/* The right-hand end of a Windows 11 taskbar: overflow chevron, the app's icons, then the
-   system glyphs, keyboard layout and two-line clock that always sit beside them. Right
-   aligned and fading out to the left, because that corner is the whole context. */
-.taskbar {
-  background: #1F2023;
-  padding: 12px 14px;
-  display: flex; align-items: center; justify-content: flex-end;
-  gap: 14px;
-  overflow: hidden;
-  position: relative;
-}
-.taskbar::before {
-  content: ""; position: absolute; inset: 0 auto 0 0; width: 30%;
-  background: linear-gradient(90deg, rgba(31,32,35,1), rgba(31,32,35,0));
-  pointer-events: none;
-}
-.tray-icon {
-  flex: none;
-  width: 24px; height: 24px;
-  display: grid; place-items: center;
-  font-family: var(--sans);
-  font-weight: 700;
-  font-size: 17px;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.04em;
-  color: var(--claude);
-}
-.taskbar .chevron,
-.taskbar .glyph,
-.taskbar .kbd {
-  flex: none;
-  color: #A6ACB6;
-  font-family: var(--sans);
-  font-size: 12px;
-  line-height: 1;
-  display: grid; place-items: center;
-  width: 24px; height: 24px;
-}
-.taskbar .kbd { width: auto; font-size: 11.5px; letter-spacing: 0.02em; }
-.taskbar .glyph svg { display: block; }
-.taskbar .clock {
-  flex: none; margin-left: 6px;
-  font-family: var(--sans); font-size: 12px; line-height: 1.3;
-  color: #D3D7DE; text-align: right;
-}
-/* The four icons this page is about, held slightly apart from their neighbours. */
-.taskbar .ours { display: flex; gap: 12px; flex: none; padding-inline: 6px; }
-.tray-icon { cursor: default; border-radius: 3px; }
-.tray-icon:focus-visible { outline: 2px solid #ECEEF2; outline-offset: 2px; }
-
-/* ---------------------------------------------------------- hover card --
-   The app's own tooltip replacement: Windows tray tooltips are text only, so
-   the service mark can only appear in a window we draw ourselves. Shown here
-   above the strip, the way it appears above the tray. */
-.stage { position: relative; background: #1F2023; padding-top: 84px; }
-.hovercard {
-  position: absolute; bottom: 58px; left: 0;
-  min-width: 210px;
-  background: #26282E;
-  border: 1px solid #42464F;
-  border-radius: 4px;
-  padding: 9px 11px;
-  transition: left 0.18s ease, opacity 0.18s ease;
-  pointer-events: none;
-}
-.hovercard .row { display: flex; align-items: baseline; gap: 0.6rem; }
-.hovercard .mark { flex: none; width: 16px; height: 16px; display: grid; place-items: center; border-radius: 4px; align-self: center; }
-.hovercard .name { color: #ECEEF2; font-size: 13px; white-space: nowrap; }
-.hovercard .value { margin-left: auto; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.hovercard .reset { margin-top: 3px; padding-left: 22px; color: #9AA0AA; font-size: 11px; white-space: nowrap; }
-@media (max-width: 34rem) { .hovercard { min-width: 0; } .hovercard .reset { display: none; } }
-
-.specimen figcaption {
-  display: flex; flex-wrap: wrap; gap: 0.5rem 1.6rem;
-  padding: 0.85rem 1.1rem;
-  border-top: var(--rule);
-  background: var(--raised);
-}
-
-/* Verifiable facts, not adjectives: every one of these can be checked in a minute. */
-.facts {
-  display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem;
-  margin: 1.5rem 0 0; padding: 0; list-style: none;
-}
-.facts li { display: flex; align-items: baseline; gap: 0.45rem; }
-/* Neutral, not green: the service colours mean "this is a reading". Spending one on a
-   decorative tick in the first screen would undo the rule the page is built on. */
-.facts li::before { content: "\2713"; color: var(--faint); font-size: 0.8em; }
-
-/* ------------------------------------------------------------- actions -- */
-.actions { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 2rem; align-items: center; }
-.requirement { margin-top: 0.85rem; font-size: 0.86rem; color: var(--muted); }
-.btn {
-  display: inline-block;
-  padding: 0.62rem 1.15rem;
-  border: 1px solid var(--text);
-  border-radius: 2px;
-  font-family: var(--mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  text-decoration: none;
-}
-.btn:hover { background: var(--text); color: var(--ink); }
-.btn.secondary { border-color: var(--line); color: var(--muted); }
-.btn.secondary:hover { background: transparent; border-color: var(--text); color: var(--text); }
-
-/* --------------------------------------------------------------- blocks -- */
-section { border-top: var(--rule); padding-block: clamp(2.75rem, 7vw, 4.5rem); }
-section > .wrap > .label { display: block; margin-bottom: 1.4rem; }
-h2 {
-  margin: 0 0 1rem;
-  font-size: clamp(1.3rem, 2.6vw, 1.75rem);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-p { margin: 0 0 1rem; max-width: 62ch; }
-p:last-child { margin-bottom: 0; }
-.muted { color: var(--muted); }
-
-/* Threshold rules, stated as data rather than as feature cards. */
-.rules { display: grid; gap: 1px; background: var(--line); border: var(--rule); border-radius: 3px; overflow: hidden; }
-@media (min-width: 40rem) { .rules { grid-template-columns: repeat(3, 1fr); } }
-.rule { background: var(--panel); padding: 1.3rem 1.2rem; }
-.rule .swatch {
-  display: flex; align-items: baseline; gap: 0.55rem;
-  font-family: var(--sans); font-weight: 700; font-size: 1.9rem;
-  font-variant-numeric: tabular-nums; letter-spacing: -0.03em;
-  line-height: 1;
-}
-.rule .swatch .unit { font-size: 0.8rem; font-weight: 600; letter-spacing: 0; color: var(--faint); }
-.rule .label { display: block; margin: 0.9rem 0 0.45rem; }
-.rule p { font-size: 0.92rem; color: var(--muted); margin: 0; }
-
-/* Source table: two rows, no chrome. */
-.sources { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
-.sources th, .sources td { text-align: left; padding: 0.85rem 0; border-bottom: var(--rule); vertical-align: baseline; }
-.sources th { width: 7.5rem; font-weight: 600; font-size: 0.95rem; }
-.sources td { color: var(--muted); font-size: 0.95rem; }
-.sources code { font-family: var(--mono); font-size: 0.83em; color: var(--text); }
-.sources tr:last-child th, .sources tr:last-child td { border-bottom: 0; }
-
-figure { margin: 0; }
-figure img { display: block; width: 100%; height: auto; border: var(--rule); border-radius: 3px; }
-figure figcaption { margin-top: 0.75rem; }
-
-.split { display: grid; gap: clamp(1.5rem, 4vw, 3rem); }
-@media (min-width: 52rem) { .split { grid-template-columns: 1.35fr 1fr; align-items: start; } }
-
-/* Spec block, monospace, the way a datasheet lists requirements. */
-.spec { font-family: var(--mono); font-size: 0.86rem; line-height: 1.9; }
-.spec dt { color: var(--faint); }
-.spec dd { margin: 0 0 0.9rem; }
-.spec dd:last-child { margin-bottom: 0; }
-
-.note {
-  border-left: 2px solid var(--line);
-  padding-left: 1.1rem;
-  color: var(--muted);
-  font-size: 0.95rem;
-}
-
-footer { border-top: var(--rule); padding-block: 2.5rem 3.5rem; color: var(--muted); font-size: 0.9rem; }
-footer .links { display: flex; flex-wrap: wrap; gap: 1.4rem; margin-bottom: 1.2rem; }
-footer .links a { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; }
-footer p { font-size: 0.88rem; }
-
-@media (prefers-reduced-motion: reduce) {
-  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-}
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -334,6 +43,7 @@ footer p { font-size: 0.88rem; }
       <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
       Source
     </a>
+    <a href="de/" hreflang="de" class="lang">DE</a>
   </nav>
 </header>
 
@@ -426,17 +136,36 @@ footer p { font-size: 0.88rem; }
 
       <div class="rules" style="margin-top: 2rem;">
         <div class="rule">
-          <div class="swatch"><span style="color: var(--claude)">34</span><span class="unit">%</span><span style="color: var(--codex)">61</span><span class="unit">%</span></div>
+          <div class="meters">
+            <div class="meter" data-target="34" data-service="claude" data-shade="0" role="img">
+              <div class="swatch"><span class="num">0</span><span class="unit">%</span></div>
+              <div class="track"><span></span></div>
+            </div>
+            <div class="meter" data-target="61" data-service="codex" data-shade="0" role="img">
+              <div class="swatch"><span class="num">0</span><span class="unit">%</span></div>
+              <div class="track"><span></span></div>
+            </div>
+          </div>
           <span class="label">Below 75%</span>
           <p>Service colour. Terracotta for Claude, green for Codex — that is what tells the icons apart at a glance.</p>
         </div>
         <div class="rule">
-          <div class="swatch"><span style="color: var(--warn)">81</span><span class="unit">%</span></div>
+          <div class="meters">
+            <div class="meter" data-target="81" data-service="claude" data-shade="1" role="img">
+              <div class="swatch"><span class="num">0</span><span class="unit">%</span></div>
+              <div class="track"><span></span></div>
+            </div>
+          </div>
           <span class="label">75% and above</span>
           <p>Amber, for every service and every limit. One colour, one meaning.</p>
         </div>
         <div class="rule">
-          <div class="swatch"><span style="color: var(--crit)">93</span><span class="unit">%</span></div>
+          <div class="meters">
+            <div class="meter" data-target="93" data-service="codex" data-shade="0" role="img">
+              <div class="swatch"><span class="num">0</span><span class="unit">%</span></div>
+              <div class="track"><span></span></div>
+            </div>
+          </div>
           <span class="label">90% and above</span>
           <p>Crimson. Both thresholds are yours to move, and so are the two service colours.</p>
         </div>
@@ -468,6 +197,21 @@ footer p { font-size: 0.88rem; }
           on first run rather than hardcoded. A failed poll keeps the last numbers on screen and
           backs off instead of blanking the tray.
         </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="settings">
+    <div class="wrap">
+      <span class="label">Settings</span>
+      <h2>Everything adjustable, nothing required</h2>
+      <p class="muted">
+        Right-click → <em>Open settings</em>. The colours tab previews the actual tray icons as you
+        change them, derived palette included.
+      </p>
+      <div class="shots">
+        <figure><img src="settings.png" alt="Settings, general tab" width="700" height="590" loading="lazy"></figure>
+        <figure><img src="settings-colors.png" alt="Settings, colours tab with a live preview of the tray icons" width="700" height="590" loading="lazy"></figure>
       </div>
     </div>
   </section>
@@ -529,7 +273,7 @@ footer p { font-size: 0.88rem; }
       <a href="https://github.com/nowrap/rate-tray">GitHub</a>
       <a href="https://github.com/nowrap/rate-tray/releases">Releases</a>
       <a href="https://github.com/nowrap/rate-tray/blob/main/CHANGELOG.md">Changelog</a>
-      <a href="https://github.com/nowrap/rate-tray/blob/main/README.de.md">Deutsch</a>
+      <a href="de/">Deutsch</a>
     </div>
     <p>
       The idea is lifted from <a href="https://www.alcpu.com/CoreTemp/">Core&nbsp;Temp</a>, which
@@ -553,107 +297,7 @@ footer p { font-size: 0.88rem; }
   </div>
 </footer>
 
-<script>
-// The one piece of motion on the page, and it is the product's logic: values climb to their
-// readings and cross the thresholds on the way, so the colour rules explain themselves.
-(function () {
-  var WARN = 75, CRIT = 90, SPREAD = 0.15;
-
-  var css = getComputedStyle(document.documentElement);
-  var base = {
-    claude: css.getPropertyValue('--claude').trim(),
-    codex: css.getPropertyValue('--codex').trim(),
-    warn: css.getPropertyValue('--warn').trim(),
-    crit: css.getPropertyValue('--crit').trim()
-  };
-
-  // Same shading the app applies: lightness only, so the brand hue survives.
-  function shade(hex, step) {
-    if (!step) return hex;
-    var n = parseInt(hex.slice(1), 16);
-    var r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
-    var lift = step * SPREAD * 255;
-    var up = function (c) { return Math.min(255, Math.round(c + lift)); };
-    return 'rgb(' + up(r) + ',' + up(g) + ',' + up(b) + ')';
-  }
-
-  function colourFor(el, value) {
-    if (value >= CRIT) return base.crit;
-    if (value >= WARN) return base.warn;
-    var shades = +el.dataset.shade / 2;
-    return shade(base[el.dataset.service], shades);
-  }
-
-  var icons = Array.prototype.slice.call(document.querySelectorAll('#tray .tray-icon'));
-  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  // ---------------------------------------------------------------- card --
-  // The card starts on the amber icon rather than waiting to be discovered: most
-  // visitors never hover anything, and it is the state worth seeing.
-  var card = document.getElementById('card');
-  var stage = card.parentNode;
-  var marks = {
-    claude: '<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">' +
-            '<path d="M5 0 C5.4 3.4 6.6 4.6 10 5 C6.6 5.4 5.4 6.6 5 10 C4.6 6.6 3.4 5.4 0 5 C3.4 4.6 4.6 3.4 5 0Z" fill="CURRENT"/></svg>',
-    codex:  '<svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="CURRENT" stroke-width="1.4" ' +
-            'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-            '<path d="M1 1.4 4 5 1 8.6"/><path d="M6 9h3"/></svg>'
-  };
-
-  function showCard(el) {
-    var value = +el.textContent;
-    var colour = colourFor(el, value);
-
-    document.getElementById('card-mark').innerHTML = marks[el.dataset.service].replace(/CURRENT/g, colour);
-    document.getElementById('card-mark').style.background = 'rgba(255,255,255,0.06)';
-    document.getElementById('card-name').textContent = el.dataset.name;
-    document.getElementById('card-reset').textContent = el.dataset.reset;
-
-    var valueNode = document.getElementById('card-value');
-    valueNode.textContent = value + ' %';
-    valueNode.style.color = colour;
-
-    // Centred on the icon, then kept inside the strip so it never hangs off an edge.
-    var iconBox = el.getBoundingClientRect();
-    var stageBox = stage.getBoundingClientRect();
-    var left = iconBox.left - stageBox.left + iconBox.width / 2 - card.offsetWidth / 2;
-    card.style.left = Math.max(10, Math.min(left, stageBox.width - card.offsetWidth - 10)) + 'px';
-  }
-
-  var active = icons[1];
-  icons.forEach(function (el) {
-    el.setAttribute('aria-label', el.dataset.name + ', ' + el.dataset.target + ' per cent. ' + el.dataset.reset);
-    ['mouseenter', 'focus'].forEach(function (event) {
-      el.addEventListener(event, function () { active = el; showCard(el); });
-    });
-  });
-  window.addEventListener('resize', function () { showCard(active); });
-
-  icons.forEach(function (el) {
-    var target = +el.dataset.target;
-
-    if (reduced) {
-      el.textContent = target;
-      el.style.color = colourFor(el, target);
-      showCard(active);
-      return;
-    }
-
-    var started = null, duration = 1500, delay = icons.indexOf(el) * 90;
-    function frame(now) {
-      if (started === null) started = now;
-      var t = Math.min(1, Math.max(0, (now - started - delay) / duration));
-      var eased = 1 - Math.pow(1 - t, 3);
-      var value = Math.round(target * eased);
-      el.textContent = value;
-      el.style.color = colourFor(el, value);
-      if (el === active) showCard(el);        // keep the card in step while the value climbs
-      if (t < 1) requestAnimationFrame(frame);
-    }
-    requestAnimationFrame(frame);
-  });
-})();
-</script>
+<script src="app.js" defer></script>
 
 </body>
 </html>
