@@ -31,6 +31,9 @@ anschlägt.
 Die Werte sind **Live-Abfragen der offiziellen Limits**, keine Schätzung aus lokalen
 Transcript-Dateien. Der Abruf kostet keine Modell-Token.
 
+Entstanden ist das aus einer spontanen Idee, zunächst als Experiment — nicht aus einer
+erkannten Marktlücke. Die Alternativen weiter unten sind erst später zufällig aufgetaucht.
+
 | Dienst | Quelle |
 |---|---|
 | Claude | `GET api.anthropic.com/api/oauth/usage`, mit dem Token, den Claude Code ohnehin speichert |

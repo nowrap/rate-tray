@@ -30,6 +30,9 @@ interrupting anything, and warns you before you hit a wall mid-task.
 The values are **live server-side readings of the official limits**, not estimates
 reconstructed from local transcript files — and fetching them costs no model tokens.
 
+It started as a spontaneous experiment rather than a considered gap in the market. The
+alternatives below were found afterwards, by accident.
+
 | Service | Source |
 |---|---|
 | Claude | `GET api.anthropic.com/api/oauth/usage`, using the token Claude Code already stores |
