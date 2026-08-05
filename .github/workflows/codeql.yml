@@ -1,0 +1,46 @@
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly, because most findings arrive as new queries against unchanged code
+    # rather than as new code.
+    - cron: '41 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
+jobs:
+  analyse:
+    # WinForms and GDI+ mean the project only builds on Windows, and CodeQL for C#
+    # analyses what the compiler actually produced.
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: csharp
+          build-mode: manual
+          queries: security-and-quality
+
+      # Explicit rather than autobuild: the solution has three projects and one of them
+      # only exists to drive the built executable, so leaving the choice to a heuristic
+      # invites analysing the wrong thing.
+      - name: Build
+        run: dotnet build RateTray.sln --configuration Release
+
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:csharp

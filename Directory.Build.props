@@ -1,0 +1,21 @@
+<Project>
+
+  <!--
+    Applies to every project in the repository, so a new one cannot quietly opt out.
+
+    NuGet's audit runs during restore and needs no separate CI step, which means it also
+    cannot be skipped by anyone building locally. Promoting its warnings to errors is the
+    point: a vulnerability advisory that only prints a warning gets scrolled past.
+
+    The app itself has no package references at all — only the test projects do, and those
+    never reach a user. This is insurance against that changing, not a response to anything
+    currently wrong.
+  -->
+  <PropertyGroup>
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <NuGetAuditLevel>low</NuGetAuditLevel>
+    <WarningsAsErrors>$(WarningsAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsAsErrors>
+  </PropertyGroup>
+
+</Project>

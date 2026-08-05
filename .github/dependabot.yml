@@ -1,0 +1,28 @@
+version: 2
+
+updates:
+  # Workflow actions are the more exposed surface here: they run with repository
+  # credentials on every push, and a compromised or abandoned action is a real path in.
+  # Pinning them to a tag only helps if something keeps the tag moving.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: Update
+    labels: [dependencies]
+
+  # The app has no package references; only the test projects do, and those never ship.
+  # Grouped into a single pull request because a test-only bump is not worth three.
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: Update
+    labels: [dependencies]
+    groups:
+      test-tooling:
+        patterns: ['*']
