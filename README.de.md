@@ -183,7 +183,9 @@ pwsh tools\New-AppIcon.ps1                   # app.ico aus der Palette neu erzeu
 ```
 
 Siehe [CONTRIBUTING.md](CONTRIBUTING.md) — darunter, wie man eine Sprache ergänzt: eine
-JSON-Datei, kein Code.
+JSON-Datei, kein Code. In [docs/IDEAS.md](docs/IDEAS.md) stehen die offenen Fäden: Portierung
+auf macOS und Linux, ein `--line`-Modus für tmux und Statusleisten, winget-Paketierung, und was
+bislang ungetestet ist (englisch).
 
 ## Datenschutz
 

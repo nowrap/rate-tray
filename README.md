@@ -178,7 +178,8 @@ pwsh tools\New-AppIcon.ps1                   # regenerate app.ico from the palet
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) — including how to add a language, which is one JSON
-file and no code.
+file and no code. [docs/IDEAS.md](docs/IDEAS.md) keeps the open threads: porting to macOS and
+Linux, a `--line` mode for tmux and status bars, winget packaging, and what is still untested.
 
 ## Privacy
 
