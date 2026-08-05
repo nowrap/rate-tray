@@ -33,7 +33,8 @@ The values are **live server-side readings of the official limits**, not estimat
 reconstructed from local transcript files — and fetching them costs no model tokens.
 
 It started as a spontaneous experiment rather than a considered gap in the market. The
-alternatives below were found afterwards, by accident.
+alternatives below turned up later, while looking into what a macOS or Linux port would take —
+by which time this already existed, so none of them informed the decision to build it.
 
 | Service | Source |
 |---|---|

@@ -42,7 +42,7 @@ public class PollSchedulerTests
         // of them may touch the failure count.
         for (var tick = 1; tick <= 6; tick++)
         {
-            var now = Start.AddSeconds(90 * tick);
+            var now = Start.AddSeconds(90d * tick);
             if (!schedule.ShouldPoll("Claude", now)) continue;
 
             Assert.Equal(2, tick);                        // first tick at or after +180 s

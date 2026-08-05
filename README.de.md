@@ -33,7 +33,9 @@ Die Werte sind **Live-Abfragen der offiziellen Limits**, keine Schätzung aus lo
 Transcript-Dateien. Der Abruf kostet keine Modell-Token.
 
 Entstanden ist das aus einer spontanen Idee, zunächst als Experiment — nicht aus einer
-erkannten Marktlücke. Die Alternativen weiter unten sind erst später zufällig aufgetaucht.
+erkannten Marktlücke. Die Alternativen weiter unten tauchten erst später auf, bei der Recherche
+zu möglichen Portierungen nach macOS und Linux. Da gab es dieses Werkzeug schon, keine von ihnen
+hat also die Entscheidung beeinflusst, es zu bauen.
 
 | Dienst | Quelle |
 |---|---|
