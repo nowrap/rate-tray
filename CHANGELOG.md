@@ -7,9 +7,15 @@ uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-06
+
 Hardening at the edges the app does not control: a file someone edited by hand, a cache someone
 changed, an endpoint that accepts a connection and then says nothing. Found by an independent
 review of the 0.1.0 code, none of it reachable on the default path.
+
+A minor version rather than a patch for one reason worth stating plainly: a configuration that
+worked before can now fail on purpose. An endpoint set to plain `http` is refused instead of
+being used, because that is a credential going out in clear.
 
 ### Fixed
 
@@ -83,5 +89,6 @@ First release.
 - Autostart via the per-user Run key.
 - `--once`, `--details` and `--settings` diagnostic modes.
 
-[Unreleased]: https://github.com/nowrap/rate-tray/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/nowrap/rate-tray/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/nowrap/rate-tray/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/nowrap/rate-tray/releases/tag/v0.1.0

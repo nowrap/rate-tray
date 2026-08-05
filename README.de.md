@@ -236,7 +236,7 @@ geprüft.
 
 Was das für dich als Leser bedeutet:
 
-- 177 Unit-Tests und 9 End-to-End-Tests, alle grün, und die App lief gegen echte Claude- und
+- 197 Unit-Tests und 9 End-to-End-Tests, alle grün, und die App lief gegen echte Claude- und
   Codex-Konten.
 - **Es gab kein unabhängiges menschliches Code-Review.** Das Programm liest deine
   Anmeldedateien, also lies [SECURITY.md](SECURITY.md) — dort steht, welche Dateien angefasst
