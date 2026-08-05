@@ -173,8 +173,53 @@
 
   <section id="how">
     <div class="wrap split">
-      <figure>
-        <img src="../details.de.png" alt="Das Detail-Fenster mit drei Claude-Limits und einem Codex-Limit, je mit Fortschrittsbalken, Reset-Zeit und der verbleibenden Gültigkeit der Anmeldung." width="840" height="507" loading="lazy">
+      <figure class="window">
+        <div class="pane" id="details" role="img" aria-label="Das Detail-Fenster: drei Claude-Limits mit 34, 81 und 22 Prozent und ein Codex-Limit mit 61 Prozent, je mit Balken, Reset-Zeit und der verbleibenden Gültigkeit der Anmeldung. Es aktualisiert sich alle 90 Sekunden selbst.">
+          <p class="svc">
+            <span class="mark" style="background: rgba(217,119,87,0.16)">
+              <svg width="11" height="11" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 0 C5.4 3.4 6.6 4.6 10 5 C6.6 5.4 5.4 6.6 5 10 C4.6 6.6 3.4 5.4 0 5 C3.4 4.6 4.6 3.4 5 0Z" fill="#D97757"/></svg>
+            </span>
+            Claude
+          </p>
+          <p class="auth">Anmeldung: gültig bis Do 06.08. 00:13 (noch 3 h 35 min) &nbsp;·&nbsp; OAuth</p>
+
+          <div class="limit" data-service="claude" data-shade="0">
+            <span class="name">Session (5 h)</span>
+            <span class="track"><span></span></span>
+            <span class="pct">0 %</span>
+            <span class="reset">Reset Mi 05.08. 23:01 (in 2 h 23 min)</span>
+          </div>
+          <div class="limit" data-service="claude" data-shade="1">
+            <span class="name">Woche · Alle Modelle <span class="active" title="Das derzeit greifende Limit">•</span></span>
+            <span class="track"><span></span></span>
+            <span class="pct">0 %</span>
+            <span class="reset">Reset Mo 10.08. 01:25 (in 4 d 4 h)</span>
+          </div>
+          <div class="limit" data-service="claude" data-shade="2">
+            <span class="name">Woche · Fable</span>
+            <span class="track"><span></span></span>
+            <span class="pct">0 %</span>
+            <span class="reset">Reset Mo 10.08. 01:25 (in 4 d 4 h)</span>
+          </div>
+
+          <p class="svc">
+            <span class="mark" style="background: rgba(16,163,127,0.16)">
+              <svg width="11" height="11" viewBox="0 0 10 10" fill="none" stroke="#10A37F" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 1.4 4 5 1 8.6"/><path d="M6 9h3"/></svg>
+            </span>
+            Codex
+          </p>
+          <p class="auth">Anmeldung: gültig bis Fr 14.08. 23:01 (noch 9 d 2 h) &nbsp;·&nbsp; chatgpt</p>
+
+          <div class="limit" data-service="codex" data-shade="0">
+            <span class="name">Codex · Woche <span class="active" title="Das derzeit greifende Limit">•</span></span>
+            <span class="track"><span></span></span>
+            <span class="pct">0 %</span>
+            <span class="reset">Reset Di 11.08. 03:49 (in 5 d 7 h)</span>
+          </div>
+
+          <p class="foot">Aktualisiert <span class="stamp">20:37:42</span> &nbsp;·&nbsp; alle 90 s &nbsp;·&nbsp; Esc schließt</p>
+          <div class="strip"><span></span></div>
+        </div>
         <figcaption class="label">Linksklick auf ein beliebiges Icon</figcaption>
       </figure>
       <div>

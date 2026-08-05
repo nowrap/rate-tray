@@ -200,6 +200,61 @@ a:hover { text-decoration-color: currentColor; }
   background: var(--raised);
 }
 
+/* --------------------------------------------------- details window --
+   A reproduction of the window a left-click opens, and like the tray specimen it stays on
+   the app's own dark surface whatever the page theme is. Both specimens declare the app's
+   dark palette here, so the scripted colours are the ones Windows actually draws rather
+   than the page's light-theme variants. */
+.specimen, .window {
+  --claude: #D97757;
+  --codex:  #10A37F;
+  --warn:   #E8B23C;
+  --crit:   #E05A56;
+}
+.window { margin: 0; }
+.window .pane {
+  background: #1F2126;
+  border: 1px solid #34383F;
+  border-radius: 4px;
+  padding: 16px 18px 0;
+  font-family: var(--sans);
+  overflow: hidden;
+}
+.window .svc {
+  display: flex; align-items: center; gap: 9px;
+  font-size: 15px; font-weight: 700; color: #ECEEF2;
+  margin: 0;
+}
+.window .limit + .svc { margin-top: 18px; }   /* services are separated, limits are grouped */
+.window .svc + .auth { margin: 4px 0 14px; }
+.window .svc .mark { flex: none; width: 19px; height: 19px; display: grid; place-items: center; border-radius: 5px; }
+.window .auth, .window .reset, .window .foot { color: #8B929E; font-size: 11px; line-height: 1.45; margin: 0; }
+
+.window .limit {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(52px, 1fr) 3.2rem;
+  column-gap: 12px; row-gap: 1px;
+  margin-bottom: 15px;
+}
+.window .limit .name { grid-column: 1; color: #ECEEF2; font-size: 13.5px; }
+.window .limit .name .active { color: #8B929E; }      /* the limit currently in force */
+.window .limit .reset { grid-column: 1; }
+.window .limit .track {
+  grid-column: 2; grid-row: 1 / span 2; align-self: center;
+  height: 8px; border-radius: 4px; overflow: hidden;
+}
+.window .limit .track > span { display: block; width: 0; height: 100%; border-radius: 4px; }
+.window .limit .pct {
+  grid-column: 3; grid-row: 1 / span 2; align-self: center;
+  text-align: right; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+
+.window .foot { padding: 6px 0 9px; }
+.window .strip { height: 3px; background: rgba(139, 146, 158, 0.15); }
+.window .strip > span { display: block; width: 0; height: 100%; background: rgba(139, 146, 158, 0.51); }
+
+.window figcaption { margin-top: 0.7rem; }
+
 /* Verifiable facts, not adjectives: every one of these can be checked in a minute. */
 .facts {
   display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem;
