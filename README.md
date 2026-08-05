@@ -21,11 +21,13 @@ Left-click any icon for the details panel:
 
 ## Why
 
-The number already exists — it is just tedious to reach. Claude moved usage back into settings,
-ChatGPT's was always buried there, and checking either means leaving what you were doing. Both
-CLIs can also show it, but only inside an interactive session (`/usage` in Claude Code,
-`/status` in Codex). This puts the same numbers where you can see them without
-interrupting anything, and warns you before you hit a wall mid-task.
+The number already exists — it is just tedious to reach. It lives in the web apps, which is a
+whole window away if you keep them parked in a webview shell like Rambox, and buried once you
+get there: Claude moved usage back into settings, ChatGPT's was always in them. Either way,
+checking means leaving what you were doing. Both CLIs can also show it, but only inside an
+interactive session (`/usage` in Claude Code, `/status` in Codex). This puts the same numbers
+where you can see them without interrupting anything, and warns you before you hit a wall
+mid-task.
 
 The values are **live server-side readings of the official limits**, not estimates
 reconstructed from local transcript files — and fetching them costs no model tokens.

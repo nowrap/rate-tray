@@ -216,6 +216,53 @@ particularly unfortunate for a tool that reads credential files. A certificate c
 annually; the alternative is to wait until download reputation accumulates. Worth deciding
 before submitting to winget rather than after.
 
+## Forecasting how long the remainder lasts
+
+The app polls every 90 s and throws each reading away once it has drawn it. Keeping them turns
+"you are at 81 %" into "at this pace you run out before the window resets", which is the question
+behind the number. Worth doing, but the honest version is harder than the arithmetic suggests.
+
+**The arithmetic is the easy part.** Fit a slope over a trailing window of samples, then
+`(100 − current) / slope` gives time-to-empty. Compare that against `ResetsAt`, which the app
+already has. The useful output is not an absolute date, it is the comparison: *runs out ~2 h
+before reset* or *comfortably clears it*.
+
+**Burstiness is the real problem.** Agent work is spiky and idle-dominated. A slope measured
+across twenty minutes of heavy use extrapolates to "empty in 40 minutes"; the same slope measured
+across lunch says "never". A naive linear fit is therefore either alarmist or useless, and both
+destroy trust in the number quickly. Two mitigations worth trying:
+
+- Measure the rate over *active* samples only — those where the value actually moved — and label
+  the result as such. "At the pace of your last hour of work" is a claim a user can check.
+- Report the estimate as a range from the active and the wall-clock rate rather than one number.
+  A forecast that admits its spread is more useful than a precise-looking one that is wrong.
+
+**Gaps must not read as zero usage.** The machine sleeps, the app is closed, backoff pauses a
+provider for up to 15 minutes. If a gap is treated as a sample of "no consumption", every
+overnight break flattens the slope and the forecast says "plenty left" each morning. Gaps are
+unknown, and a series with a large one should suppress the forecast rather than guess through it.
+
+**Resets segment the series.** The percentage drops to zero at every reset, which a slope fit
+would read as enormous negative usage. Samples have to be split at each `ResetsAt` boundary, and
+only the current segment counts.
+
+**Persistence is the part to be careful about.** History on disk changes what this tool *is*.
+"Reads two files, contacts one endpoint, keeps nothing" is currently part of the pitch and of
+[SECURITY.md](../SECURITY.md). A usage history is a record of when someone was working and how
+hard — more revealing than the live number it is derived from. So: off by default, a documented
+file path, a bound on the file's size, and a visible way to erase it.
+
+**Start without persistence.** A first version that forecasts only from samples collected since
+launch needs no new file, no settings migration, and no change to the privacy claim, and it
+becomes useful within an hour of work — which is exactly when the question gets asked. Ship that,
+see whether the number holds up against reality, and only then decide whether it is worth keeping
+history across restarts.
+
+Display would go in the details window as a line under each bar. It should not get a colour: the
+three threshold rules are the whole colour vocabulary, and a forecast is an estimate, not a
+reading. It does pair naturally with the existing notification threshold — "notify me when a
+limit is *projected* to run out before its reset" is a better trigger than a fixed percentage.
+
 ## Loose ends from 0.1.0
 
 - **`claude.autoRefreshToken` has never been exercised against the live endpoint.** It is off by
