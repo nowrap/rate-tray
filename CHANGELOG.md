@@ -29,7 +29,7 @@ First release.
   service are shaded apart by lightness; shading stops at the warning threshold so amber and
   crimson keep one meaning.
 - Failed polls keep the last readings on screen and back that provider off exponentially,
-  capped at 15 minutes, honouring a server-stated `Retry-After` when there is one; the menu''s
+  capped at 15 minutes, honouring a server-stated `Retry-After` when there is one; the menu's
   refresh command clears the backoff. A rate limit takes the full pause on the first refusal
   rather than climbing to it, since retrying a spent quota only spends more of it.
 - Strip along the bottom of the details window counting down to the next refresh, and a
@@ -44,3 +44,6 @@ First release.
 - Threshold notifications, once per reset window.
 - Autostart via the per-user Run key.
 - `--once`, `--details` and `--settings` diagnostic modes.
+
+[Unreleased]: https://github.com/nowrap/rate-tray/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/nowrap/rate-tray/releases/tag/v0.1.0

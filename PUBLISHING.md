@@ -49,7 +49,7 @@ before tagging.
 ## Worth knowing about the screenshots
 
 `docs/details*.png` are rendered from invented readings by `tools/New-Screenshots.ps1`, not
-captured from a running instance. A live capture would publish the account''s subscription
+captured from a running instance. A live capture would publish the account's subscription
 tiers, its usage at that moment and its sign-in timestamps. Regenerate them after a visible UI
 change:
 

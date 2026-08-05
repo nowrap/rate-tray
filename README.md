@@ -133,7 +133,7 @@ If the server states a `Retry-After`, that wins over the guess, and the details 
 long the pause still has to run. A rate limit goes straight to the longest pause instead of
 climbing to it: a spent quota is not something retrying makes better. *Refresh now* in the menu clears the backoff.
 
-The interval, the backoff ceiling and each service''s request timeout are all in the settings
+The interval, the backoff ceiling and each service's request timeout are all in the settings
 dialog. Options added by a newer version are written into an existing `settings.json` on the
 next start, so the file always shows everything that can be set.
 
