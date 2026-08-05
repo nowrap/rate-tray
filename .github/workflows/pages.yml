@@ -1,0 +1,53 @@
+name: Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - 'docs/*.png'
+      - 'src/RateTray/app.ico'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; a queued run replaces a pending one rather than racing it.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # The screenshots and icon live with the app, not with the site, so there is one place
+      # to regenerate them (tools/New-Screenshots.ps1) and no second copy to keep in step.
+      - name: Assemble
+        run: |
+          mkdir -p _site
+          cp -r site/. _site/
+          cp docs/details.png docs/details.de.png docs/tray-icons.png _site/
+          cp src/RateTray/app.ico _site/favicon.ico
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

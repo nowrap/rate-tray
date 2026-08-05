@@ -27,6 +27,11 @@ is written in Swift, a Windows shell is not a natural contribution to it either.
 Being MIT, it is also a legitimate reference for how other providers expose their limits, if
 this ever grows beyond two.
 
+A second one exists — [Naruse0208/codex-rate-tray](https://github.com/Naruse0208/codex-rate-tray),
+also C#, Codex only. Noted for completeness rather than as an alternative to point people at: it
+carries **no licence**, which means all rights reserved by default, so nobody can legally reuse
+or fork it.
+
 ### What already ports
 
 The split is cleaner than it looks, because the providers were written without any knowledge of

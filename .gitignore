@@ -25,3 +25,7 @@ coverage*.json
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+# Copied into site/ at build time from docs/ and src/ — one source of truth, not two
+site/*.png
+site/favicon.ico

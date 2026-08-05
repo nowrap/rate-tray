@@ -187,6 +187,16 @@ The app talks to exactly two places: Anthropic's usage endpoint and a local `cod
 process. Credentials are read from the files the official CLIs already maintain and are never
 copied, logged or sent anywhere else. See [SECURITY.md](SECURITY.md).
 
+## Acknowledgements
+
+The idea is lifted from [Core Temp](https://www.alcpu.com/CoreTemp/), which has been showing
+per-core CPU temperatures as numbers in the notification area for years. RateTray does the same
+thing for a different kind of budget.
+
+**On macOS?** Use [CodexBar](https://github.com/steipete/CodexBar) instead — a menu bar app
+covering far more providers, MIT licensed, and it ships a Linux CLI too. RateTray exists because
+it has no Windows counterpart.
+
 ## Trademarks
 
 Not affiliated with, endorsed by or sponsored by Anthropic or OpenAI. "Claude" and "Codex" are

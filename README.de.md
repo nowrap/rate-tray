@@ -194,6 +194,16 @@ Die App spricht mit genau zwei Stellen: dem Usage-Endpunkt von Anthropic und ein
 CLIs ohnehin pflegen, und niemals kopiert, protokolliert oder anderswohin gesendet. Siehe
 [SECURITY.md](SECURITY.md).
 
+## Dank
+
+Die Idee ist von [Core Temp](https://www.alcpu.com/CoreTemp/) abgeschaut, das seit Jahren
+CPU-Temperaturen pro Kern als Zahlen in den Infobereich schreibt. RateTray macht dasselbe für
+eine andere Art von Kontingent.
+
+**Auf macOS?** Dort ist [CodexBar](https://github.com/steipete/CodexBar) die bessere Wahl — ein
+Menüleisten-Programm mit weit mehr Anbietern, MIT-lizenziert, samt Linux-CLI. RateTray gibt es,
+weil es dazu kein Windows-Gegenstück gibt.
+
 ## Marken
 
 Keine Verbindung zu Anthropic oder OpenAI, weder unterstützt noch gesponsert. „Claude" und
