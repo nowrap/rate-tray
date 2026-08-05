@@ -198,6 +198,30 @@ a:hover { text-decoration-color: currentColor; }
 }
 /* The four icons this page is about, held slightly apart from their neighbours. */
 .taskbar .ours { display: flex; gap: 12px; flex: none; padding-inline: 6px; }
+.tray-icon { cursor: default; border-radius: 3px; }
+.tray-icon:focus-visible { outline: 2px solid #ECEEF2; outline-offset: 2px; }
+
+/* ---------------------------------------------------------- hover card --
+   The app's own tooltip replacement: Windows tray tooltips are text only, so
+   the service mark can only appear in a window we draw ourselves. Shown here
+   above the strip, the way it appears above the tray. */
+.stage { position: relative; background: #1F2023; padding-top: 84px; }
+.hovercard {
+  position: absolute; bottom: 58px; left: 0;
+  min-width: 210px;
+  background: #26282E;
+  border: 1px solid #42464F;
+  border-radius: 4px;
+  padding: 9px 11px;
+  transition: left 0.18s ease, opacity 0.18s ease;
+  pointer-events: none;
+}
+.hovercard .row { display: flex; align-items: baseline; gap: 0.6rem; }
+.hovercard .mark { flex: none; width: 16px; height: 16px; display: grid; place-items: center; border-radius: 4px; align-self: center; }
+.hovercard .name { color: #ECEEF2; font-size: 13px; white-space: nowrap; }
+.hovercard .value { margin-left: auto; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.hovercard .reset { margin-top: 3px; padding-left: 22px; color: #9AA0AA; font-size: 11px; white-space: nowrap; }
+@media (max-width: 34rem) { .hovercard { min-width: 0; } .hovercard .reset { display: none; } }
 
 .specimen figcaption {
   display: flex; flex-wrap: wrap; gap: 0.5rem 1.6rem;
@@ -331,13 +355,26 @@ footer p { font-size: 0.88rem; }
     </ul>
 
     <figure class="specimen">
-      <div class="taskbar" id="tray" aria-hidden="true">
-        <span class="chevron">&#94;</span>
+      <div class="stage">
+      <div class="hovercard" id="card">
+        <div class="row">
+          <span class="mark" id="card-mark"></span>
+          <span class="name" id="card-name"></span>
+          <span class="value" id="card-value"></span>
+        </div>
+        <div class="reset" id="card-reset"></div>
+      </div>
+      <div class="taskbar" id="tray">
+        <span class="chevron" aria-hidden="true">&#94;</span>
         <span class="ours">
-          <span class="tray-icon" data-target="34" data-service="claude" data-shade="0">0</span>
-          <span class="tray-icon" data-target="81" data-service="claude" data-shade="1">0</span>
-          <span class="tray-icon" data-target="22" data-service="claude" data-shade="2">0</span>
-          <span class="tray-icon" data-target="61" data-service="codex"  data-shade="0">0</span>
+          <span class="tray-icon" tabindex="0" data-target="34" data-service="claude" data-shade="0"
+                data-name="Session (5 h)" data-reset="Reset in 2 h 23 min">0</span>
+          <span class="tray-icon" tabindex="0" data-target="81" data-service="claude" data-shade="1"
+                data-name="Week &#183; All models" data-reset="Reset in 4 d 4 h">0</span>
+          <span class="tray-icon" tabindex="0" data-target="22" data-service="claude" data-shade="2"
+                data-name="Week &#183; Fable" data-reset="Reset in 4 d 4 h">0</span>
+          <span class="tray-icon" tabindex="0" data-target="61" data-service="codex"  data-shade="0"
+                data-name="Codex &#183; Week" data-reset="Reset in 5 d 7 h">0</span>
         </span>
         <span class="kbd">DEU</span>
         <span class="glyph">
@@ -350,11 +387,12 @@ footer p { font-size: 0.88rem; }
             <path d="M8.5 3 5 6H2.5v4H5l3.5 3z" stroke-linejoin="round"/><path d="M11 6a3.6 3.6 0 0 1 0 4"/>
           </svg>
         </span>
-        <span class="clock">21:32<br>05.08.2026</span>
+        <span class="clock" aria-hidden="true">21:32<br>05.08.2026</span>
+      </div>
       </div>
       <figcaption>
         <span class="label">24&nbsp;px — the size Windows draws it</span>
-        <span class="label">Colours follow the app's own rules</span>
+        <span class="label">Hover a number for the card</span>
       </figcaption>
     </figure>
 
@@ -549,12 +587,55 @@ footer p { font-size: 0.88rem; }
   var icons = Array.prototype.slice.call(document.querySelectorAll('#tray .tray-icon'));
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // ---------------------------------------------------------------- card --
+  // The card starts on the amber icon rather than waiting to be discovered: most
+  // visitors never hover anything, and it is the state worth seeing.
+  var card = document.getElementById('card');
+  var stage = card.parentNode;
+  var marks = {
+    claude: '<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">' +
+            '<path d="M5 0 C5.4 3.4 6.6 4.6 10 5 C6.6 5.4 5.4 6.6 5 10 C4.6 6.6 3.4 5.4 0 5 C3.4 4.6 4.6 3.4 5 0Z" fill="CURRENT"/></svg>',
+    codex:  '<svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="CURRENT" stroke-width="1.4" ' +
+            'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+            '<path d="M1 1.4 4 5 1 8.6"/><path d="M6 9h3"/></svg>'
+  };
+
+  function showCard(el) {
+    var value = +el.textContent;
+    var colour = colourFor(el, value);
+
+    document.getElementById('card-mark').innerHTML = marks[el.dataset.service].replace(/CURRENT/g, colour);
+    document.getElementById('card-mark').style.background = 'rgba(255,255,255,0.06)';
+    document.getElementById('card-name').textContent = el.dataset.name;
+    document.getElementById('card-reset').textContent = el.dataset.reset;
+
+    var valueNode = document.getElementById('card-value');
+    valueNode.textContent = value + ' %';
+    valueNode.style.color = colour;
+
+    // Centred on the icon, then kept inside the strip so it never hangs off an edge.
+    var iconBox = el.getBoundingClientRect();
+    var stageBox = stage.getBoundingClientRect();
+    var left = iconBox.left - stageBox.left + iconBox.width / 2 - card.offsetWidth / 2;
+    card.style.left = Math.max(10, Math.min(left, stageBox.width - card.offsetWidth - 10)) + 'px';
+  }
+
+  var active = icons[1];
+  icons.forEach(function (el) {
+    el.setAttribute('aria-label', el.dataset.name + ', ' + el.dataset.target + ' per cent. ' + el.dataset.reset);
+    ['mouseenter', 'focus'].forEach(function (event) {
+      el.addEventListener(event, function () { active = el; showCard(el); });
+    });
+  });
+  window.addEventListener('resize', function () { showCard(active); });
+
   icons.forEach(function (el) {
     var target = +el.dataset.target;
 
     if (reduced) {
       el.textContent = target;
       el.style.color = colourFor(el, target);
+      showCard(active);
       return;
     }
 
@@ -566,6 +647,7 @@ footer p { font-size: 0.88rem; }
       var value = Math.round(target * eased);
       el.textContent = value;
       el.style.color = colourFor(el, value);
+      if (el === active) showCard(el);        // keep the card in step while the value climbs
       if (t < 1) requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
