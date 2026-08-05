@@ -8,6 +8,9 @@ a bad idea on closer inspection.
 
 ### Prior art: CodexBar already covers macOS and the Linux CLI
 
+All of this turned up while researching *this* section — what a macOS or Linux port would take.
+RateTray was already built by then, which is why none of it informed the decision to build it.
+
 [steipete/CodexBar](https://github.com/steipete/CodexBar) is a macOS 14+ menu bar app doing the
 same job for far more providers — Codex, Claude, Cursor, Gemini, Copilot, Bedrock, OpenRouter,
 LiteLLM and others. MIT licensed, ~20k stars, actively maintained, and it ships a CLI with
