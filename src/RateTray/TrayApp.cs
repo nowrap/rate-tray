@@ -36,8 +36,10 @@ public sealed class TrayApp : ApplicationContext
 
     private ToolStripMenuItem _iconsMenu = null!;
     private ToolStripMenuItem _languageMenu = null!;
+    private ToolStripMenuItem _aboutMenu = null!;
     private DetailsForm? _details;
     private TooltipWindow? _tooltip;
+    private UpdateCheck.Result? _latestUpdate;
     private DateTime _lastHover = DateTime.MinValue;
     private Point _lastHoverPos;
     private string? _hoveredId;
@@ -95,6 +97,7 @@ public sealed class TrayApp : ApplicationContext
         _tooltipTimer.Tick += (_, _) => HideTooltipWhenIdle();
 
         _ = RefreshAsync();
+        MaybeCheckForUpdates();
     }
 
     // ---------------------------------------------------------------- polling
@@ -479,9 +482,12 @@ public sealed class TrayApp : ApplicationContext
         _menu.Items.Add(notify);
 
         _menu.Items.Add(new ToolStripMenuItem(Loc.T("menu.settings"), null, (_, _) => OpenSettings()));
+        _aboutMenu = new ToolStripMenuItem(Loc.T("menu.about"), null, (_, _) => OpenAbout());
+        _menu.Items.Add(_aboutMenu);
         _menu.Items.Add(new ToolStripSeparator());
         _menu.Items.Add(new ToolStripMenuItem(Loc.T("menu.quit"), null, (_, _) => Quit()));
 
+        UpdateAboutMarker();
         RefreshIconsMenu();
     }
 
@@ -597,6 +603,46 @@ public sealed class TrayApp : ApplicationContext
         BuildMenu();
         _ = RefreshAsync();
     }
+
+    // ------------------------------------------------------------------ about
+
+    private void OpenAbout()
+    {
+        HideTooltip();
+        using var about = new AboutForm(_config, _latestUpdate, result => { if (result is not null) SetLatestUpdate(result); });
+        about.ShowDialog();
+    }
+
+    /// <summary>
+    /// Fires the daily start-up update check, unless it is switched off or has already run in the
+    /// last 24 hours. The result only marks the About entry — nothing interrupts the user.
+    /// </summary>
+    private void MaybeCheckForUpdates()
+    {
+        if (!_config.AutoUpdateCheck) return;
+        if (_config.LastUpdateCheck is { } last && DateTimeOffset.Now - last < TimeSpan.FromHours(24)) return;
+
+        _ = CheckForUpdatesAsync();
+    }
+
+    private async Task CheckForUpdatesAsync()
+    {
+        var result = await UpdateCheck.LatestAsync(AppInfo.SemVer).ConfigureAwait(true);
+
+        _config.LastUpdateCheck = DateTimeOffset.Now;
+        ConfigStore.Save(_config);
+        if (result is not null) SetLatestUpdate(result);
+    }
+
+    private void SetLatestUpdate(UpdateCheck.Result result)
+    {
+        _latestUpdate = result;
+        UpdateAboutMarker();
+    }
+
+    /// <summary>Appends a dot to the About entry while a newer version is known.</summary>
+    private void UpdateAboutMarker() =>
+        _aboutMenu.Text = _latestUpdate is { IsNewer: true } ? Loc.T("menu.about") + "  •" : Loc.T("menu.about");
 
     private void ToggleDetails()
     {

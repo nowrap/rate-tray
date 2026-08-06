@@ -50,6 +50,16 @@ public sealed class AppConfig
     /// </summary>
     public int MaxBackoffMinutes { get; set; } = 15;
 
+    /// <summary>
+    /// Check GitHub for a newer release on start-up, at most once a day. Off means the tray never
+    /// reaches the network for this — the About dialog's manual button still works.
+    /// </summary>
+    public bool AutoUpdateCheck { get; set; } = true;
+
+    /// <summary>When the automatic check last ran, so it is not repeated on every launch. Null
+    /// until the first check.</summary>
+    public DateTimeOffset? LastUpdateCheck { get; set; }
+
     public ThresholdOptions Thresholds { get; set; } = new();
     public NotificationOptions Notifications { get; set; } = new();
     public ClaudeOptions Claude { get; set; } = new();
