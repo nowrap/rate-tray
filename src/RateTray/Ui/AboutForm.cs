@@ -92,10 +92,10 @@ public sealed class AboutForm : Form
         {
             Text = Loc.T("about.close"),
             AutoSize = true,
-            DialogResult = DialogResult.OK,
             Anchor = AnchorStyles.Right,
             Margin = new Padding(3, 16, 3, 0),
         };
+        close.Click += (_, _) => Close();
         AcceptButton = close;
         CancelButton = close;
         root.Controls.Add(close);
@@ -160,6 +160,7 @@ public sealed class AboutForm : Form
         ConfigStore.Save(_config);
         _onChecked?.Invoke(result);
 
+        if (IsDisposed) return;      // may have closed on deactivation while the check ran
         _check.Enabled = true;
         if (result is null) { _status.Text = Loc.T("about.checkFailed"); return; }
         ShowResult(result);

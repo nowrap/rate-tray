@@ -40,6 +40,9 @@ public sealed class TrayApp : ApplicationContext
     private DetailsForm? _details;
     private TooltipWindow? _tooltip;
     private UpdateCheck.Result? _latestUpdate;
+
+    /// <summary>The one modal dialog (About or Settings) allowed open at a time.</summary>
+    private Form? _dialog;
     private DateTime _lastHover = DateTime.MinValue;
     private Point _lastHoverPos;
     private string? _hoveredId;
@@ -584,10 +587,14 @@ public sealed class TrayApp : ApplicationContext
 
     private void OpenSettings()
     {
-        HideTooltip();
+        if (BringOpenDialogToFront()) return;
 
         using var form = new SettingsForm(_config, _lastReadings.Values.ToList());
-        if (form.ShowDialog() != DialogResult.OK) return;
+        _dialog = form;
+        DialogResult result;
+        try { result = form.ShowDialog(); }
+        finally { _dialog = null; }
+        if (result != DialogResult.OK) return;
 
         Loc.Use(_config.Language);
         _timer.Interval = PollIntervalMs;
@@ -608,9 +615,27 @@ public sealed class TrayApp : ApplicationContext
 
     private void OpenAbout()
     {
-        HideTooltip();
+        if (BringOpenDialogToFront()) return;
+
         using var about = new AboutForm(_config, _latestUpdate, result => { if (result is not null) SetLatestUpdate(result); });
-        about.ShowDialog();
+        _dialog = about;
+        try { about.ShowDialog(); }
+        finally { _dialog = null; }
+    }
+
+    /// <summary>
+    /// Keeps a single modal window (About or Settings) at a time: if one is already open, brings it
+    /// to the front instead of stacking a second dialog — or a second copy of the same one — on top.
+    /// The tray menu stays clickable while a dialog is up, so without this the user could do either.
+    /// </summary>
+    private bool BringOpenDialogToFront()
+    {
+        HideTooltip();
+        if (_dialog is not { IsDisposed: false }) return false;
+
+        if (_dialog.WindowState == FormWindowState.Minimized) _dialog.WindowState = FormWindowState.Normal;
+        _dialog.Activate();
+        return true;
     }
 
     /// <summary>
@@ -674,6 +699,7 @@ public sealed class TrayApp : ApplicationContext
 
         _tooltip?.Dispose();
         _details?.Dispose();
+        _dialog?.Close();
         ExitThread();
     }
 
