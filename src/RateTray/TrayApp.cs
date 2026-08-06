@@ -27,7 +27,7 @@ public sealed class TrayApp : ApplicationContext
     private readonly List<IUsageProvider> _providers;
     private readonly System.Windows.Forms.Timer _timer = new();
     private readonly System.Windows.Forms.Timer _tooltipTimer = new();
-    private readonly Dictionary<string, NotifyIcon> _icons = [];
+    private readonly Dictionary<string, TrayIcon> _icons = [];
     private readonly ContextMenuStrip _menu = new();
     private readonly CancellationTokenSource _shutdown = new();
 
@@ -304,15 +304,31 @@ public sealed class TrayApp : ApplicationContext
             RemoveIcon(stale);
     }
 
-    private NotifyIcon CreateIcon(string id)
+    private TrayIcon CreateIcon(string id)
     {
-        var icon = new NotifyIcon { ContextMenuStrip = _menu, Visible = false };
+        var icon = new TrayIcon(TrayIcon.GuidFor(id), PrettyLabel(id), nativeTooltip: !_config.RichTooltips)
+        {
+            ContextMenuStrip = _menu,
+        };
 
         icon.MouseClick += (_, e) => { if (e.Button == MouseButtons.Left) ToggleDetails(); };
         icon.MouseMove += (_, _) => ShowTooltip(id);
         _icons[id] = icon;
         return icon;
     }
+
+    /// <summary>
+    /// Human-readable, stable name for a limit id ("claude.weekly_scoped.fable" -> "Claude · Weekly
+    /// scoped · Fable"), used to name the Windows settings entry. Derived from the id, not the
+    /// provider label: the label is empty until the first live poll, and the settings name freezes
+    /// when the icon is first added — usually from cache, before any poll has run.
+    /// </summary>
+    private static string PrettyLabel(string id) =>
+        string.Join(" · ", id.Split('.', StringSplitOptions.RemoveEmptyEntries).Select(part =>
+        {
+            var text = part.Replace('_', ' ').Trim();
+            return text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text[1..];
+        }));
 
     private void RemoveIcon(string id)
     {
