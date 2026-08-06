@@ -17,6 +17,7 @@ public sealed class TooltipWindow : Form
     private const int WsExNoActivate = 0x08000000;
     private const int WsExToolWindow = 0x00000080;
     private const int WsExTopMost = 0x00000008;
+    private const int WsExTransparent = 0x00000020;
 
     private readonly AppConfig _config;
     private readonly Palette _palette;
@@ -53,7 +54,7 @@ public sealed class TooltipWindow : Form
         get
         {
             var cp = base.CreateParams;
-            cp.ExStyle |= WsExNoActivate | WsExToolWindow | WsExTopMost;
+            cp.ExStyle |= WsExNoActivate | WsExToolWindow | WsExTopMost | WsExTransparent;
             return cp;
         }
     }
@@ -76,13 +77,53 @@ public sealed class TooltipWindow : Form
         BuildFonts();
 
         var screen = Screen.FromPoint(cursor);
+        var work = screen.WorkingArea;
         var size = Measure();
+        var gap = Px(6);
+        var pad = Px(4);
 
-        // Offset from the cursor, then clamped so the card never leaves the work area.
-        var x = Math.Clamp(cursor.X - size.Width / 2, screen.WorkingArea.Left + Px(4),
-            Math.Max(screen.WorkingArea.Left + Px(4), screen.WorkingArea.Right - size.Width - Px(4)));
-        var y = cursor.Y - size.Height - Px(14);
-        if (y < screen.WorkingArea.Top) y = Math.Min(cursor.Y + Px(20), screen.WorkingArea.Bottom - size.Height);
+        var taskbar = Native.TaskbarRect();
+        int x, y;
+
+        // A tray icon is hovered either on the taskbar itself or inside the overflow flyout that
+        // pops up from the chevron. On the taskbar we anchor to its edge so the card sits at a
+        // steady height like the details fly-out; in the flyout the icon is nowhere near that
+        // edge, so there we follow the pointer — otherwise the card detaches from the icon.
+        if (taskbar is { } bar && bar.Contains(cursor))
+        {
+            switch (FlyoutPlacement.EdgeOf(bar, screen.Bounds))
+            {
+                case FlyoutPlacement.Edge.Top:
+                    x = cursor.X - size.Width / 2; y = work.Top + gap; break;
+                case FlyoutPlacement.Edge.Left:
+                    x = work.Left + gap; y = cursor.Y - size.Height / 2; break;
+                case FlyoutPlacement.Edge.Right:
+                    x = work.Right - size.Width - gap; y = cursor.Y - size.Height / 2; break;
+                default:
+                    x = cursor.X - size.Width / 2; y = work.Bottom - size.Height - gap; break;
+            }
+        }
+        else if (Native.WindowRectAt(cursor) is { } flyout && flyout.Contains(cursor))
+        {
+            // Overflow flyout (the "^" popup): sit just above the whole flyout, LEFT-aligned to its
+            // visible edge — the way the shell's own tooltips appear there — never covering it. The
+            // reported window left sits a little outside the visible rounded box (corner margin), so
+            // nudge right to line the card up with the box edge.
+            y = flyout.Top - size.Height - gap;
+            x = flyout.Left + Px(11);
+        }
+        else
+        {
+            // Fallback (flyout rect unavailable): sit just above the pointer, dropping below it
+            // only when there is no room above.
+            x = cursor.X - size.Width / 2;
+            y = cursor.Y - size.Height - Px(14);
+            if (y < work.Top + pad) y = cursor.Y + Px(20);
+        }
+
+        // Clamped so the card never leaves the work area.
+        x = Math.Clamp(x, work.Left + pad, Math.Max(work.Left + pad, work.Right - size.Width - pad));
+        y = Math.Clamp(y, work.Top + pad, Math.Max(work.Top + pad, work.Bottom - size.Height - pad));
 
         Bounds = new Rectangle(x, y, size.Width, size.Height);
 

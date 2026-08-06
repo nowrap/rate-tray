@@ -54,8 +54,10 @@ public sealed class DetailsForm : Form
         KeyPreview = true;
 
         BuildFonts();
-        Deactivate += (_, _) => { if (AutoHide) Hide(); };
+        Deactivate += (_, _) => { if (AutoHide) { LastAutoHidden = DateTime.UtcNow; Hide(); } };
         KeyDown += (_, e) => { if (e.KeyCode == Keys.Escape) Hide(); };
+        // A click anywhere in the panel dismisses it, the way a tray fly-out should.
+        MouseClick += (_, _) => Hide();
 
         _countdown.Tick += (_, _) => InvalidateCountdown();
         VisibleChanged += (_, _) =>
@@ -68,6 +70,13 @@ public sealed class DetailsForm : Form
     /// <summary>Off in the --details preview, where losing focus must not close the window.</summary>
     [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
     public bool AutoHide { get; init; } = true;
+
+    /// <summary>
+    /// When the window last hid itself on losing focus. A tray-icon click deactivates it before
+    /// the click handler runs, so <see cref="TrayApp"/> reads this to tell "the click that just
+    /// closed it" apart from "a fresh click meant to open it".
+    /// </summary>
+    public DateTime LastAutoHidden { get; private set; } = DateTime.MinValue;
 
     private bool Dark => TrayIconRenderer.UsesDarkTaskbar(_config.Theme);
 

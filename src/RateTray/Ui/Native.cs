@@ -16,6 +16,15 @@ internal static class Native
     private static extern IntPtr MonitorFromPoint(PointStruct point, uint flags);
 
     [DllImport("user32.dll")]
+    private static extern IntPtr WindowFromPoint(PointStruct point);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetAncestor(IntPtr hwnd, uint flags);
+
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmGetWindowAttribute(IntPtr hwnd, int attribute, out Rect rect, int size);
+
+    [DllImport("user32.dll")]
     private static extern uint GetDpiForWindow(IntPtr hWnd);
 
     [DllImport("Shcore.dll")]
@@ -23,6 +32,8 @@ internal static class Native
 
     private const uint MonitorDefaultToNearest = 2;
     private const int MdtEffectiveDpi = 0;
+    private const uint GaRoot = 2;
+    private const int DwmwaExtendedFrameBounds = 9;
 
     [StructLayout(LayoutKind.Sequential)]
     private struct Rect { public int Left, Top, Right, Bottom; }
@@ -35,6 +46,32 @@ internal static class Native
     {
         var handle = FindWindow("Shell_TrayWnd", null);
         if (handle == IntPtr.Zero || !GetWindowRect(handle, out var r)) return null;
+
+        var rect = Rectangle.FromLTRB(r.Left, r.Top, r.Right, r.Bottom);
+        return rect is { Width: > 0, Height: > 0 } ? rect : null;
+    }
+
+    /// <summary>
+    /// Screen rectangle of the top-level window under <paramref name="point"/>. Used to find the
+    /// tray overflow flyout so a hover card can be placed just above it, the way the shell's own
+    /// tooltips are. Null if there is no usable window there.
+    /// </summary>
+    public static Rectangle? WindowRectAt(Point point)
+    {
+        var handle = WindowFromPoint(new PointStruct { X = point.X, Y = point.Y });
+        if (handle == IntPtr.Zero) return null;
+
+        handle = GetAncestor(handle, GaRoot);
+        if (handle == IntPtr.Zero) return null;
+
+        // Prefer the DWM extended-frame bounds: GetWindowRect includes the drop shadow, which on a
+        // Win11 flyout is a dozen-odd transparent pixels — enough that "left-aligned" would stick
+        // out past the visible edge. Fall back to GetWindowRect where DWM has no answer.
+        Rect r;
+        if (DwmGetWindowAttribute(handle, DwmwaExtendedFrameBounds, out var frame, Marshal.SizeOf<Rect>()) == 0)
+            r = frame;
+        else if (!GetWindowRect(handle, out r))
+            return null;
 
         var rect = Rectangle.FromLTRB(r.Left, r.Top, r.Right, r.Bottom);
         return rect is { Width: > 0, Height: > 0 } ? rect : null;

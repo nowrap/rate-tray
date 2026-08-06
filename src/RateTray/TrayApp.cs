@@ -16,6 +16,9 @@ public sealed class TrayApp : ApplicationContext
     /// <summary>Hover cards are hidden once the tray stops reporting mouse movement.</summary>
     private const int TooltipIdleMs = 700;
 
+    /// <summary>How far the pointer may drift and still count as "still parked on the icon".</summary>
+    private const int HoverSlack = 4;
+
     /// <summary>Floor for the poll interval — the usage endpoint rate-limits a tight loop.</summary>
     private const int MinRefreshSeconds = 30;
 
@@ -36,6 +39,8 @@ public sealed class TrayApp : ApplicationContext
     private DetailsForm? _details;
     private TooltipWindow? _tooltip;
     private DateTime _lastHover = DateTime.MinValue;
+    private Point _lastHoverPos;
+    private string? _hoveredId;
 
     private IReadOnlyList<ProviderResult> _lastResults = [];
     private Dictionary<string, LimitReading> _lastReadings = [];
@@ -78,6 +83,7 @@ public sealed class TrayApp : ApplicationContext
         _schedule = new PollScheduler(_config.MaxBackoffMinutes);
 
         BuildMenu();
+        _menu.Opened += (_, _) => HideTooltip();
         ShowCachedReadings();
 
         _timer.Interval = PollIntervalMs;
@@ -339,12 +345,26 @@ public sealed class TrayApp : ApplicationContext
 
     private void ShowTooltip(string id)
     {
+        var pos = Cursor.Position;
         _lastHover = DateTime.UtcNow;
+        _lastHoverPos = pos;
         if (!_config.RichTooltips) return;
 
-        _tooltip ??= new TooltipWindow(_config, _palette);
-        _tooltip.ShowFor(_lastReadings.GetValueOrDefault(id), GroupOf(id), ErrorForId(id), Cursor.Position);
+        // The pinned details window is the rich view; a hover card would both cover it and, by
+        // pulling the foreground off it, dismiss it on the very next mouse move (issue #5). The
+        // context menu likewise owns the screen while it is open.
+        if (_details is { Visible: true } || _menu.Visible) return;
+
         _tooltipTimer.Start();
+
+        // MouseMove fires repeatedly while the pointer rests on one icon. Re-showing the card on
+        // every message repositioned and repainted it constantly; only move it when the pointer
+        // actually crosses to a different icon.
+        if (id == _hoveredId && _tooltip is { Visible: true }) return;
+
+        _hoveredId = id;
+        _tooltip ??= new TooltipWindow(_config, _palette);
+        _tooltip.ShowFor(_lastReadings.GetValueOrDefault(id), GroupOf(id), ErrorForId(id), pos);
     }
 
     /// <summary>
@@ -353,10 +373,33 @@ public sealed class TrayApp : ApplicationContext
     /// </summary>
     private void HideTooltipWhenIdle()
     {
+        if (_tooltip is not { Visible: true }) { _tooltipTimer.Stop(); return; }
+
+        // The shell stops sending MouseMove once the pointer is still, so idle time alone would
+        // dismiss a card the user is actively hovering — very visible in the overflow flyout, where
+        // MouseMove is sparse. Treat "pointer hasn't moved" as "still hovering" and keep the card
+        // up; only once it has clearly moved away, with no MouseMove to refresh us, does it hide.
+        var pos = Cursor.Position;
+        if (Math.Abs(pos.X - _lastHoverPos.X) <= HoverSlack && Math.Abs(pos.Y - _lastHoverPos.Y) <= HoverSlack)
+        {
+            _lastHover = DateTime.UtcNow;
+            return;
+        }
+
         if ((DateTime.UtcNow - _lastHover).TotalMilliseconds < TooltipIdleMs) return;
 
         _tooltipTimer.Stop();
+        HideTooltip();
+    }
+
+    /// <summary>
+    /// Hides the hover card and forgets which icon it was showing, so the next hover re-shows it
+    /// rather than treating the pointer as still parked on the icon it last drew for.
+    /// </summary>
+    private void HideTooltip()
+    {
         _tooltip?.Hide();
+        _hoveredId = null;
     }
 
     // ---------------------------------------------------------- notifications
@@ -475,7 +518,7 @@ public sealed class TrayApp : ApplicationContext
 
         // Labels are produced by the providers, so they only pick up the new language on the
         // next poll; the details window is rebuilt from that result.
-        _tooltip?.Hide();
+        HideTooltip();
         _ = RefreshAsync();
     }
 
@@ -535,7 +578,7 @@ public sealed class TrayApp : ApplicationContext
 
     private void OpenSettings()
     {
-        _tooltip?.Hide();
+        HideTooltip();
 
         using var form = new SettingsForm(_config, _lastReadings.Values.ToList());
         if (form.ShowDialog() != DialogResult.OK) return;
@@ -557,11 +600,20 @@ public sealed class TrayApp : ApplicationContext
 
     private void ToggleDetails()
     {
-        _tooltip?.Hide();
+        HideTooltip();
         _details ??= new DetailsForm(_config, _palette);
 
-        if (_details.Visible) _details.Hide();
-        else _details.ShowNearTray(_lastResults, _lastUpdate, _nextPoll);
+        if (_details.Visible)
+        {
+            _details.Hide();
+            return;
+        }
+
+        // Clicking a tray icon deactivates the details window first, so it may have auto-hidden
+        // itself a few milliseconds ago — that same click therefore means "close", not "reopen".
+        if ((DateTime.UtcNow - _details.LastAutoHidden).TotalMilliseconds < 250) return;
+
+        _details.ShowNearTray(_lastResults, _lastUpdate, _nextPoll);
     }
 
     // --------------------------------------------------------------- shutdown
