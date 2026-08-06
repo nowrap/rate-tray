@@ -83,6 +83,7 @@ a:hover { text-decoration-color: currentColor; }
   font-weight: 600;
 }
 .topbar nav { display: flex; align-items: center; gap: 1.4rem; }
+.topbar nav .nav-sections { display: contents; }
 .topbar nav a {
   display: inline-flex; align-items: center; gap: 0.45rem;
   font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em;
@@ -90,6 +91,31 @@ a:hover { text-decoration-color: currentColor; }
 }
 .topbar nav a:hover { color: var(--text); }
 .topbar nav svg { display: block; flex: none; }
+
+/* On a phone the four links do not fit beside the wordmark: English breaks
+   "How it works" over three lines, German pushes the language switch off the
+   right edge entirely. Give the bar two rows instead — identity and the two
+   outbound links on top, the section anchors underneath, flush with the
+   wordmark. The rows must not share grid columns, or the long German labels
+   below would squeeze the links above back off-screen; hence the wrapper
+   spanning the full width. */
+@media (max-width: 34rem) {
+  .topbar {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    column-gap: 1.1rem;
+    row-gap: 0.55rem;
+    align-items: center;
+  }
+  .topbar nav { display: contents; }
+  .wordmark { grid-row: 1; grid-column: 1; }
+  .topbar nav .nav-sections {
+    grid-row: 2; grid-column: 1 / -1;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.4rem;
+  }
+  .topbar nav > a[href^="https://github"] { grid-row: 1; grid-column: 2; }
+  .topbar nav a.lang { grid-row: 1; grid-column: 3; padding-left: 1.1rem; }
+}
 
 /* ----------------------------------------------------------------- hero -- */
 .hero { padding-block: clamp(3rem, 9vw, 6rem) clamp(2.5rem, 6vw, 4rem); }
