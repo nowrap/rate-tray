@@ -42,7 +42,11 @@ Codex data does not involve the network at all from this app's side — it start
 `codex app-server` process and speaks JSON-RPC to it over stdio. Whatever that process does
 upstream is the Codex CLI's own behaviour.
 
-There is no telemetry, no crash reporting and no update check.
+There is no telemetry and no crash reporting. The update check is off by default: enable it in the
+About dialog and RateTray asks GitHub once a day for the repository's tag list —
+`https://api.github.com/repos/nowrap/rate-tray/tags`, over https, carrying no token and nothing
+about you beyond the request itself. The dialog's manual "check for updates" button makes the same
+request on demand. Both use a fixed address, not a setting.
 
 **Processes started**
 

@@ -62,7 +62,7 @@
     <ul class="facts label">
       <li>352&nbsp;KB, eine Datei</li>
       <li>MIT, quelloffen</li>
-      <li>Keine Telemetrie, eine Gegenstelle</li>
+      <li>Keine Telemetrie, standardmäßig eine Gegenstelle</li>
       <li>Claude&nbsp;Code + Codex</li>
     </ul>
 
@@ -300,7 +300,8 @@
         Anmeldedaten werden aus den Dateien gelesen, die die offiziellen CLIs ohnehin pflegen, und
         niemals kopiert, protokolliert oder anderswohin gesendet. Wie ausgeliefert gibt es genau
         ein Ziel — den Usage-Endpunkt von Anthropic — und Codex-Daten verlassen deinen Rechner
-        überhaupt nie. Keine Telemetrie, keine Update-Abfrage.
+        überhaupt nie. Keine Telemetrie; als Einziges kommt ein optionaler Update-Check hinzu,
+        standardmäßig aus, der GitHub einmal täglich nach der Version fragt, wenn du ihn einschaltest.
       </p>
       <p class="muted">
         Diese Adresse ist eine Einstellung und keine Konstante, damit ein Endpunkt, der umzieht,

@@ -44,7 +44,7 @@ public static class UpdateCheck
     }
 
     /// <summary>Parses a "v1.2.3" (or "1.2.3") tag into a normalised version; false if it is not one.</summary>
-    private static bool TryParseTag(string? tag, out Version version)
+    internal static bool TryParseTag(string? tag, out Version version)
     {
         version = new Version(0, 0, 0);
         if (string.IsNullOrWhiteSpace(tag)) return false;

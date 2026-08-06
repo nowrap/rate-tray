@@ -62,7 +62,7 @@
     <ul class="facts label">
       <li>352&nbsp;KB, one file</li>
       <li>MIT, open source</li>
-      <li>No telemetry, one endpoint</li>
+      <li>No telemetry, one endpoint by default</li>
       <li>Claude&nbsp;Code + Codex</li>
     </ul>
 
@@ -300,8 +300,9 @@
       <p class="muted">
         Credentials are read from the files the official CLIs already maintain, and are never
         copied, logged, or sent anywhere else. As shipped there is one destination — Anthropic's
-        usage endpoint — and Codex data never leaves your machine at all. No telemetry, no
-        update check.
+        usage endpoint — and Codex data never leaves your machine at all. No telemetry; the only
+        extra is an optional update check, off by default, that asks GitHub for the version once a
+        day if you turn it on.
       </p>
       <p class="muted">
         That address is a setting rather than a constant, so that an endpoint which moves can be
