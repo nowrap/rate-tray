@@ -222,7 +222,7 @@ Beide können deutlich mehr als RateTray und verdienen den ersten Blick:
 
 Das sind die Deluxe-Varianten, und wer ein Dashboard möchte, ist dort richtig. RateTray verfolgt
 stattdessen den Core-Temp-Ansatz: Der Wert wird ins Icon selbst gezeichnet, es gibt also nichts
-zu öffnen und nichts zu klicken. 352 KB, zwei Dienste, eine Idee.
+zu öffnen und nichts zu klicken. 377 KB, zwei Dienste, eine Idee.
 
 ## Marken
 

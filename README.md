@@ -215,7 +215,7 @@ Both of these do far more than RateTray and are worth your attention first:
 
 Those are the deluxe version, and if you want a dashboard that is what you want. RateTray takes
 the Core Temp approach instead: the value is drawn into the icon itself, so there is nothing to
-open and nothing to click. 352 KB, two services, one idea.
+open and nothing to click. 377 KB, two services, one idea.
 
 ## Trademarks
 
