@@ -1,0 +1,5 @@
+# Everything published here is meant to be found; there is nothing to hold back.
+User-agent: *
+Disallow:
+
+Sitemap: https://ratetray.nowrap.net/sitemap.xml
