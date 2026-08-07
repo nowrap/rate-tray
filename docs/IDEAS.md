@@ -31,7 +31,7 @@ because no Windows counterpart did was simply wrong, and it had been published.
 
 What is actually different is the approach, not the platform. Those are the deluxe version:
 dashboards, dozens of providers, panels to open. RateTray keeps Core Temp's idea — the value is
-drawn into the tray icon itself, so nothing has to be opened or clicked. 352 KB against 28 MB,
+drawn into the tray icon itself, so nothing has to be opened or clicked. 377 KB against 28 MB,
 two services against 56. Whether that is worth having is a fair question; it is at least a
 different question from "does anything else exist".
 
@@ -177,7 +177,7 @@ the comfort of an MSI.
 The **runtime dependency** matters more. The published build is framework-dependent, so without
 the .NET 9 Desktop Runtime the executable fails to start. Declaring
 `Microsoft.DotNet.DesktopRuntime.9` as above makes winget install it. The alternative is a
-self-contained build: no dependency, but roughly 70 MB instead of 352 KB. Declaring the
+self-contained build: no dependency, but roughly 70 MB instead of 377 KB. Declaring the
 dependency is what winget resolution exists for.
 
 Test locally before submitting anything:
@@ -250,8 +250,8 @@ would read as enormous negative usage. Samples have to be split at each `ResetsA
 only the current segment counts.
 
 **Persistence is the part to be careful about.** History on disk changes what this tool *is*.
-"Reads two files, contacts one endpoint, keeps nothing" is currently part of the pitch and of
-[SECURITY.md](../SECURITY.md). A usage history is a record of when someone was working and how
+"Reads two files, contacts one endpoint by default, keeps nothing" is currently part of the pitch
+and of [SECURITY.md](../SECURITY.md). A usage history is a record of when someone was working and how
 hard — more revealing than the live number it is derived from. So: off by default, a documented
 file path, a bound on the file's size, and a visible way to erase it.
 
@@ -280,6 +280,30 @@ limit is *projected* to run out before its reset" is a better trigger than a fix
 - **More providers.** `IUsageProvider` was built for this; nothing else ships today. Whatever
   comes next needs a way to read limits that costs no model tokens, which is the part that took
   the longest for both existing providers.
+
+## Reflecting the Windows overflow state in the Icons menu
+
+Since 0.3.0 each tray icon has its own Windows identity (a GUID), so Windows remembers per icon
+whether it sits on the taskbar or hidden behind the `^` overflow — the `IsPromoted` value under
+`HKCU\Control Panel\NotifyIconSettings\<hash>`, keyed by the icon's `IconGuid`.
+
+The in-app *Icons* submenu controls a different axis — whether RateTray draws an icon at all — so
+the two can disagree: an icon that is enabled in RateTray but hidden by Windows looks, to someone
+who only checked the app, like it is simply gone. Reading `IsPromoted` (read only) and annotating
+such entries — "Session  (hidden in overflow)" — would close that gap.
+
+Kept out of 0.3.0 on purpose:
+
+- The store and its `IsPromoted`/`IconGuid` values are **undocumented**; a format change would
+  quietly break the annotation. Read-only keeps the blast radius to a stale label.
+- **Writing** `IsPromoted` — a "show this in the taskbar" button in the app — is the more tempting
+  and more dangerous version: undocumented, and whether Explorer picks the change up without a
+  restart is unverified. Promotion stays Windows' job.
+- It is one-way and cosmetic. The real answer to "where did my icon go" is the note already in both
+  READMEs about Windows 11 hiding new tray icons.
+
+So: a small, read-only, opt-in nicety at most — worth it only if the overflow default trips users
+up in practice.
 
 ## Deliberately out of scope
 

@@ -15,7 +15,7 @@
 <meta property="og:site_name" content="RateTray">
 <meta property="og:locale" content="de_DE">
 <meta property="og:title" content="RateTray — Live-Auslastung von Claude Code und Codex">
-<meta property="og:description" content="Sieh ein Limit kommen, bevor es dich mitten in der Arbeit stoppt. Ein Tray-Icon pro Limit, direkt von den Diensten gelesen. 352 KB, MIT, keine Telemetrie.">
+<meta property="og:description" content="Sieh ein Limit kommen, bevor es dich mitten in der Arbeit stoppt. Ein Tray-Icon pro Limit, direkt von den Diensten gelesen. 377 KB, MIT, keine Telemetrie.">
 <meta property="og:image" content="https://ratetray.nowrap.net/social.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -23,7 +23,7 @@
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="RateTray — Live-Auslastung von Claude Code und Codex">
-<meta name="twitter:description" content="Sieh ein Limit kommen, bevor es dich mitten in der Arbeit stoppt. Ein Tray-Icon pro Limit, direkt von den Diensten gelesen. 352 KB, MIT, keine Telemetrie.">
+<meta name="twitter:description" content="Sieh ein Limit kommen, bevor es dich mitten in der Arbeit stoppt. Ein Tray-Icon pro Limit, direkt von den Diensten gelesen. 377 KB, MIT, keine Telemetrie.">
 <meta name="twitter:image" content="https://ratetray.nowrap.net/social.png">
 
 <link rel="icon" href="../favicon.ico" sizes="any">
@@ -60,9 +60,9 @@
     </p>
 
     <ul class="facts label">
-      <li>352&nbsp;KB, eine Datei</li>
+      <li>377&nbsp;KB, eine Datei</li>
       <li>MIT, quelloffen</li>
-      <li>Keine Telemetrie, eine Gegenstelle</li>
+      <li>Keine Telemetrie, standardmäßig eine Gegenstelle</li>
       <li>Claude&nbsp;Code + Codex</li>
     </ul>
 
@@ -300,7 +300,8 @@
         Anmeldedaten werden aus den Dateien gelesen, die die offiziellen CLIs ohnehin pflegen, und
         niemals kopiert, protokolliert oder anderswohin gesendet. Wie ausgeliefert gibt es genau
         ein Ziel — den Usage-Endpunkt von Anthropic — und Codex-Daten verlassen deinen Rechner
-        überhaupt nie. Keine Telemetrie, keine Update-Abfrage.
+        überhaupt nie. Keine Telemetrie; als Einziges kommt ein optionaler Update-Check hinzu,
+        standardmäßig aus, der GitHub einmal täglich nach der Version fragt, wenn du ihn einschaltest.
       </p>
       <p class="muted">
         Diese Adresse ist eine Einstellung und keine Konstante, damit ein Endpunkt, der umzieht,
@@ -312,7 +313,7 @@
         Das alles solltest du nicht einfach glauben. Das Programm liest deine Anmeldedateien, und
         geschrieben hat es ein KI-Agent unter menschlicher Anleitung, ohne unabhängiges Review —
         eine Kombination, der gegenüber Skepsis angebracht ist. Genau darin liegt der Nutzen von
-        352&nbsp;KB und 3.350 Zeilen C#: klein genug, um es vor dem Ausführen selbst zu lesen.
+        377&nbsp;KB und 4.900 Zeilen C#: klein genug, um es vor dem Ausführen selbst zu lesen.
       </p>
       <p><a href="https://github.com/nowrap/rate-tray/blob/main/SECURITY.md">Nachlesen, was genau gelesen und geschrieben wird →</a></p>
     </div>

@@ -16,6 +16,9 @@ public sealed class TrayApp : ApplicationContext
     /// <summary>Hover cards are hidden once the tray stops reporting mouse movement.</summary>
     private const int TooltipIdleMs = 700;
 
+    /// <summary>How far the pointer may drift and still count as "still parked on the icon".</summary>
+    private const int HoverSlack = 4;
+
     /// <summary>Floor for the poll interval — the usage endpoint rate-limits a tight loop.</summary>
     private const int MinRefreshSeconds = 30;
 
@@ -24,7 +27,7 @@ public sealed class TrayApp : ApplicationContext
     private readonly List<IUsageProvider> _providers;
     private readonly System.Windows.Forms.Timer _timer = new();
     private readonly System.Windows.Forms.Timer _tooltipTimer = new();
-    private readonly Dictionary<string, NotifyIcon> _icons = [];
+    private readonly Dictionary<string, TrayIcon> _icons = [];
     private readonly ContextMenuStrip _menu = new();
     private readonly CancellationTokenSource _shutdown = new();
 
@@ -33,9 +36,16 @@ public sealed class TrayApp : ApplicationContext
 
     private ToolStripMenuItem _iconsMenu = null!;
     private ToolStripMenuItem _languageMenu = null!;
+    private ToolStripMenuItem _aboutMenu = null!;
     private DetailsForm? _details;
     private TooltipWindow? _tooltip;
+    private UpdateCheck.Result? _latestUpdate;
+
+    /// <summary>The one modal dialog (About or Settings) allowed open at a time.</summary>
+    private Form? _dialog;
     private DateTime _lastHover = DateTime.MinValue;
+    private Point _lastHoverPos;
+    private string? _hoveredId;
 
     private IReadOnlyList<ProviderResult> _lastResults = [];
     private Dictionary<string, LimitReading> _lastReadings = [];
@@ -78,6 +88,7 @@ public sealed class TrayApp : ApplicationContext
         _schedule = new PollScheduler(_config.MaxBackoffMinutes);
 
         BuildMenu();
+        _menu.Opened += (_, _) => HideTooltip();
         ShowCachedReadings();
 
         _timer.Interval = PollIntervalMs;
@@ -89,6 +100,7 @@ public sealed class TrayApp : ApplicationContext
         _tooltipTimer.Tick += (_, _) => HideTooltipWhenIdle();
 
         _ = RefreshAsync();
+        MaybeCheckForUpdates();
     }
 
     // ---------------------------------------------------------------- polling
@@ -292,15 +304,31 @@ public sealed class TrayApp : ApplicationContext
             RemoveIcon(stale);
     }
 
-    private NotifyIcon CreateIcon(string id)
+    private TrayIcon CreateIcon(string id)
     {
-        var icon = new NotifyIcon { ContextMenuStrip = _menu, Visible = false };
+        var icon = new TrayIcon(TrayIcon.GuidFor(id), PrettyLabel(id), nativeTooltip: !_config.RichTooltips)
+        {
+            ContextMenuStrip = _menu,
+        };
 
         icon.MouseClick += (_, e) => { if (e.Button == MouseButtons.Left) ToggleDetails(); };
         icon.MouseMove += (_, _) => ShowTooltip(id);
         _icons[id] = icon;
         return icon;
     }
+
+    /// <summary>
+    /// Human-readable, stable name for a limit id ("claude.weekly_scoped.fable" -> "Claude · Weekly
+    /// scoped · Fable"), used to name the Windows settings entry. Derived from the id, not the
+    /// provider label: the label is empty until the first live poll, and the settings name freezes
+    /// when the icon is first added — usually from cache, before any poll has run.
+    /// </summary>
+    private static string PrettyLabel(string id) =>
+        string.Join(" · ", id.Split('.', StringSplitOptions.RemoveEmptyEntries).Select(part =>
+        {
+            var text = part.Replace('_', ' ').Trim();
+            return text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text[1..];
+        }));
 
     private void RemoveIcon(string id)
     {
@@ -339,12 +367,26 @@ public sealed class TrayApp : ApplicationContext
 
     private void ShowTooltip(string id)
     {
+        var pos = Cursor.Position;
         _lastHover = DateTime.UtcNow;
+        _lastHoverPos = pos;
         if (!_config.RichTooltips) return;
 
-        _tooltip ??= new TooltipWindow(_config, _palette);
-        _tooltip.ShowFor(_lastReadings.GetValueOrDefault(id), GroupOf(id), ErrorForId(id), Cursor.Position);
+        // The pinned details window is the rich view; a hover card would both cover it and, by
+        // pulling the foreground off it, dismiss it on the very next mouse move (issue #5). The
+        // context menu likewise owns the screen while it is open.
+        if (_details is { Visible: true } || _menu.Visible) return;
+
         _tooltipTimer.Start();
+
+        // MouseMove fires repeatedly while the pointer rests on one icon. Re-showing the card on
+        // every message repositioned and repainted it constantly; only move it when the pointer
+        // actually crosses to a different icon.
+        if (id == _hoveredId && _tooltip is { Visible: true }) return;
+
+        _hoveredId = id;
+        _tooltip ??= new TooltipWindow(_config, _palette);
+        _tooltip.ShowFor(_lastReadings.GetValueOrDefault(id), GroupOf(id), ErrorForId(id), pos);
     }
 
     /// <summary>
@@ -353,10 +395,33 @@ public sealed class TrayApp : ApplicationContext
     /// </summary>
     private void HideTooltipWhenIdle()
     {
+        if (_tooltip is not { Visible: true }) { _tooltipTimer.Stop(); return; }
+
+        // The shell stops sending MouseMove once the pointer is still, so idle time alone would
+        // dismiss a card the user is actively hovering — very visible in the overflow flyout, where
+        // MouseMove is sparse. Treat "pointer hasn't moved" as "still hovering" and keep the card
+        // up; only once it has clearly moved away, with no MouseMove to refresh us, does it hide.
+        var pos = Cursor.Position;
+        if (Math.Abs(pos.X - _lastHoverPos.X) <= HoverSlack && Math.Abs(pos.Y - _lastHoverPos.Y) <= HoverSlack)
+        {
+            _lastHover = DateTime.UtcNow;
+            return;
+        }
+
         if ((DateTime.UtcNow - _lastHover).TotalMilliseconds < TooltipIdleMs) return;
 
         _tooltipTimer.Stop();
+        HideTooltip();
+    }
+
+    /// <summary>
+    /// Hides the hover card and forgets which icon it was showing, so the next hover re-shows it
+    /// rather than treating the pointer as still parked on the icon it last drew for.
+    /// </summary>
+    private void HideTooltip()
+    {
         _tooltip?.Hide();
+        _hoveredId = null;
     }
 
     // ---------------------------------------------------------- notifications
@@ -436,9 +501,12 @@ public sealed class TrayApp : ApplicationContext
         _menu.Items.Add(notify);
 
         _menu.Items.Add(new ToolStripMenuItem(Loc.T("menu.settings"), null, (_, _) => OpenSettings()));
+        _aboutMenu = new ToolStripMenuItem(Loc.T("menu.about"), null, (_, _) => OpenAbout());
+        _menu.Items.Add(_aboutMenu);
         _menu.Items.Add(new ToolStripSeparator());
         _menu.Items.Add(new ToolStripMenuItem(Loc.T("menu.quit"), null, (_, _) => Quit()));
 
+        UpdateAboutMarker();
         RefreshIconsMenu();
     }
 
@@ -475,7 +543,7 @@ public sealed class TrayApp : ApplicationContext
 
         // Labels are produced by the providers, so they only pick up the new language on the
         // next poll; the details window is rebuilt from that result.
-        _tooltip?.Hide();
+        HideTooltip();
         _ = RefreshAsync();
     }
 
@@ -535,10 +603,14 @@ public sealed class TrayApp : ApplicationContext
 
     private void OpenSettings()
     {
-        _tooltip?.Hide();
+        if (BringOpenDialogToFront()) return;
 
         using var form = new SettingsForm(_config, _lastReadings.Values.ToList());
-        if (form.ShowDialog() != DialogResult.OK) return;
+        _dialog = form;
+        DialogResult result;
+        try { result = form.ShowDialog(); }
+        finally { _dialog = null; }
+        if (result != DialogResult.OK) return;
 
         Loc.Use(_config.Language);
         _timer.Interval = PollIntervalMs;
@@ -555,13 +627,80 @@ public sealed class TrayApp : ApplicationContext
         _ = RefreshAsync();
     }
 
+    // ------------------------------------------------------------------ about
+
+    private void OpenAbout()
+    {
+        if (BringOpenDialogToFront()) return;
+
+        using var about = new AboutForm(_config, _latestUpdate, result => { if (result is not null) SetLatestUpdate(result); });
+        _dialog = about;
+        try { about.ShowDialog(); }
+        finally { _dialog = null; }
+    }
+
+    /// <summary>
+    /// Keeps a single modal window (About or Settings) at a time: if one is already open, brings it
+    /// to the front instead of stacking a second dialog — or a second copy of the same one — on top.
+    /// The tray menu stays clickable while a dialog is up, so without this the user could do either.
+    /// </summary>
+    private bool BringOpenDialogToFront()
+    {
+        HideTooltip();
+        if (_dialog is not { IsDisposed: false }) return false;
+
+        if (_dialog.WindowState == FormWindowState.Minimized) _dialog.WindowState = FormWindowState.Normal;
+        _dialog.Activate();
+        return true;
+    }
+
+    /// <summary>
+    /// Fires the daily start-up update check, unless it is switched off or has already run in the
+    /// last 24 hours. The result only marks the About entry — nothing interrupts the user.
+    /// </summary>
+    private void MaybeCheckForUpdates()
+    {
+        if (!_config.AutoUpdateCheck) return;
+        if (_config.LastUpdateCheck is { } last && DateTimeOffset.Now - last < TimeSpan.FromHours(24)) return;
+
+        _ = CheckForUpdatesAsync();
+    }
+
+    private async Task CheckForUpdatesAsync()
+    {
+        var result = await UpdateCheck.LatestAsync(AppInfo.SemVer).ConfigureAwait(true);
+
+        _config.LastUpdateCheck = DateTimeOffset.Now;
+        ConfigStore.Save(_config);
+        if (result is not null) SetLatestUpdate(result);
+    }
+
+    private void SetLatestUpdate(UpdateCheck.Result result)
+    {
+        _latestUpdate = result;
+        UpdateAboutMarker();
+    }
+
+    /// <summary>Appends a dot to the About entry while a newer version is known.</summary>
+    private void UpdateAboutMarker() =>
+        _aboutMenu.Text = _latestUpdate is { IsNewer: true } ? Loc.T("menu.about") + "  •" : Loc.T("menu.about");
+
     private void ToggleDetails()
     {
-        _tooltip?.Hide();
+        HideTooltip();
         _details ??= new DetailsForm(_config, _palette);
 
-        if (_details.Visible) _details.Hide();
-        else _details.ShowNearTray(_lastResults, _lastUpdate, _nextPoll);
+        if (_details.Visible)
+        {
+            _details.Hide();
+            return;
+        }
+
+        // Clicking a tray icon deactivates the details window first, so it may have auto-hidden
+        // itself a few milliseconds ago — that same click therefore means "close", not "reopen".
+        if ((DateTime.UtcNow - _details.LastAutoHidden).TotalMilliseconds < 250) return;
+
+        _details.ShowNearTray(_lastResults, _lastUpdate, _nextPoll);
     }
 
     // --------------------------------------------------------------- shutdown
@@ -576,6 +715,7 @@ public sealed class TrayApp : ApplicationContext
 
         _tooltip?.Dispose();
         _details?.Dispose();
+        _dialog?.Close();
         ExitThread();
     }
 

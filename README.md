@@ -71,7 +71,7 @@ The result is a single file under
 |---|---|
 | Hover | Card with the service mark, current value and reset time |
 | Left-click | Details panel: every limit, reset times, sign-in validity, and a faint strip along the bottom edge counting down to the next refresh |
-| Right-click | Menu: pick icons, refresh, language, autostart, settings |
+| Right-click | Menu: pick icons, refresh, language, autostart, settings, about |
 | `Esc` | Close the details panel |
 
 Which icons appear is **discovered from your account on first run** — plans differ, and
@@ -100,6 +100,7 @@ Everything is also editable directly in `%APPDATA%\RateTray\settings.json`:
   "icons": [ "claude.session", "claude.weekly_all", "codex.primary" ],
   "iconsInitialized": true,      // set false to re-discover the limits on your account
   "maxBackoffMinutes": 15,     // longest pause after repeated failures
+  "autoUpdateCheck": false,    // opt-in: check GitHub once a day for a new version
   "thresholds":    { "warn": 75, "critical": 90 },
   "notifications": { "enabled": true, "atPercent": 80 },
   "colors": {
@@ -191,9 +192,11 @@ Linux, a `--line` mode for tmux and status bars, winget packaging, and what is s
 
 ## Privacy
 
-The app talks to exactly two places: Anthropic's usage endpoint and a local `codex app-server`
-process. Credentials are read from the files the official CLIs already maintain and are never
-copied, logged or sent anywhere else. See [SECURITY.md](SECURITY.md).
+As shipped the app talks to two places: Anthropic's usage endpoint and a local `codex app-server`
+process. An optional update check — off by default, enabled in the About dialog — adds one more:
+GitHub, asked once a day for the tag list, with no token and nothing about you. Credentials are
+read from the files the official CLIs already maintain and are never copied, logged or sent
+anywhere else. See [SECURITY.md](SECURITY.md).
 
 ## Acknowledgements
 
@@ -212,7 +215,7 @@ Both of these do far more than RateTray and are worth your attention first:
 
 Those are the deluxe version, and if you want a dashboard that is what you want. RateTray takes
 the Core Temp approach instead: the value is drawn into the icon itself, so there is nothing to
-open and nothing to click. 352 KB, two services, one idea.
+open and nothing to click. 377 KB, two services, one idea.
 
 ## Trademarks
 
@@ -228,7 +231,7 @@ colours, thresholds, licence — and tested the running app.
 
 What that means for you as a reader:
 
-- There are 197 unit tests and 9 end-to-end tests, all passing, and the app has been run
+- There are 214 unit tests and 9 end-to-end tests, all passing, and the app has been run
   against live Claude and Codex accounts.
 - **It has had no independent human code review.** It reads your credential files, so read
   [SECURITY.md](SECURITY.md) — it states exactly which files are touched and where anything is

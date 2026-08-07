@@ -50,6 +50,17 @@ public sealed class AppConfig
     /// </summary>
     public int MaxBackoffMinutes { get; set; } = 15;
 
+    /// <summary>
+    /// Off by default: RateTray makes no network call you did not ask for. Turn it on — in the About
+    /// dialog — to check GitHub for a newer release on start-up, at most once a day. The manual
+    /// "check for updates" button in that dialog works either way.
+    /// </summary>
+    public bool AutoUpdateCheck { get; set; } = false;
+
+    /// <summary>When the automatic check last ran, so it is not repeated on every launch. Null
+    /// until the first check.</summary>
+    public DateTimeOffset? LastUpdateCheck { get; set; }
+
     public ThresholdOptions Thresholds { get; set; } = new();
     public NotificationOptions Notifications { get; set; } = new();
     public ClaudeOptions Claude { get; set; } = new();

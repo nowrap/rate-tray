@@ -5,7 +5,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this is
 
 A Windows tray indicator showing Claude and Codex subscription usage as Core Temp-style
-numbers — one `NotifyIcon` per limit, each drawing its percentage straight into the icon.
+numbers — one custom `TrayIcon` per limit (`Ui/TrayIcon.cs`: `Shell_NotifyIcon` with a per-icon
+GUID, so each is its own persistent, individually show/hideable Windows tray entry), each drawing
+its percentage straight into the icon.
 Windows-only by design (WinForms, GDI+, the HKCU Run key).
 
 ## Commands
@@ -107,8 +109,10 @@ touching hue.
 
 ## Constraints worth knowing before editing
 
-- **`NotifyIcon.Text` is capped at 63 characters by WinForms** (not the 127 Win32 allows). The
-  hover card exists partly to escape that; `TrayApp.Clamp` guards the fallback path.
+- **The native tooltip (`szTip`) holds 127 characters** — the Win32 limit; WinForms `NotifyIcon`
+  capped it at 63, the custom `TrayIcon` does not. The rich hover card still exists for the service
+  mark and live reset; the plain-text tooltip is only the `richTooltips: false` fallback, and is
+  otherwise suppressed (no `NIF_SHOWTIP`).
 - **Tray icon text must be drawn with GDI+ `Graphics.DrawString`, not `TextRenderer`.**
   TextRenderer uses GDI, which cannot composite onto transparency and leaves black fringes.
 - **Do not set `StringAlignment.Center` in `TrayIconRenderer`.** The scale transform already
@@ -116,7 +120,14 @@ touching hue.
   as `/`). Alignment stays `Near`, and `TextRenderingHint` is `AntiAlias` — grid fitting
   distorts glyphs drawn through a transform.
 - `Icon.FromHandle` does not own its handle: clone the icon, `DestroyIcon` the original, and
-  dispose the previous `NotifyIcon.Icon` on every refresh, or each poll leaks a GDI object.
+  dispose the previous `TrayIcon.Icon` on every refresh, or each poll leaks a GDI object. The shell
+  copies the `hIcon` at the `Shell_NotifyIcon` call, so the old one is safe to free afterwards.
+- **`TrayIcon` uses one hidden window per icon plus a stable per-icon GUID** — that is what gives
+  each a separate, persistent Windows tray entry (WinForms `NotifyIcon` sets no GUID, so its icons
+  collapse into one). Map only `NIN_SELECT` to a click (raw `WM_LBUTTONUP` also arrives under
+  version 4 and would double-fire), re-add every icon on the `TaskbarCreated` broadcast, and carry
+  the GUID on every `Shell_NotifyIcon` call. New GUID icons land in the overflow flyout until
+  promoted — Windows hides new tray icons — and that choice then persists per icon.
 - Icon size comes from `SystemInformation.SmallIconSize` (24 px at 150 % scaling, not 16).
 - **Size the fly-out from the target monitor's DPI** (`Native.DpiForPoint`), never the form's
   `DeviceDpi`: it is sized before being moved there, so on a mixed 4K/HD desktop its own DPI is

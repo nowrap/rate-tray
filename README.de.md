@@ -73,7 +73,7 @@ Das Ergebnis ist eine einzelne Datei unter
 |---|---|
 | Mouseover | Karte mit Dienst-Symbol, aktuellem Wert und Reset-Zeit |
 | Linksklick | Detail-Fenster: alle Limits, Reset-Zeiten, Gültigkeit der Anmeldung — und eine dezente Leiste an der Unterkante, die bis zur nächsten Aktualisierung läuft |
-| Rechtsklick | Menü: Icons wählen, aktualisieren, Sprache, Autostart, Einstellungen |
+| Rechtsklick | Menü: Icons wählen, aktualisieren, Sprache, Autostart, Einstellungen, Über |
 | `Esc` | Detail-Fenster schließen |
 
 Welche Icons erscheinen, wird **beim ersten Start aus deinem Konto ermittelt** — die Tarife
@@ -103,6 +103,7 @@ Alles lässt sich auch direkt in `%APPDATA%\RateTray\settings.json` bearbeiten:
   "icons": [ "claude.session", "claude.weekly_all", "codex.primary" ],
   "iconsInitialized": true,      // auf false setzen, um die Limits neu zu ermitteln
   "maxBackoffMinutes": 15,     // längste Pause nach wiederholten Fehlern
+  "autoUpdateCheck": false,    // opt-in: einmal täglich GitHub auf neue Version prüfen
   "thresholds":    { "warn": 75, "critical": 90 },
   "notifications": { "enabled": true, "atPercent": 80 },
   "colors": {
@@ -197,8 +198,10 @@ bislang ungetestet ist (englisch).
 
 ## Datenschutz
 
-Die App spricht mit genau zwei Stellen: dem Usage-Endpunkt von Anthropic und einem lokalen
-`codex app-server`-Prozess. Anmeldedaten werden aus den Dateien gelesen, die die offiziellen
+Ausgeliefert spricht die App mit zwei Stellen: dem Usage-Endpunkt von Anthropic und einem lokalen
+`codex app-server`-Prozess. Ein optionaler Update-Check — standardmäßig aus, im Über-Dialog
+einschaltbar — kommt als dritte hinzu: GitHub, einmal täglich nach der Tag-Liste gefragt, ohne
+Token und ohne etwas über dich. Anmeldedaten werden aus den Dateien gelesen, die die offiziellen
 CLIs ohnehin pflegen, und niemals kopiert, protokolliert oder anderswohin gesendet. Siehe
 [SECURITY.md](SECURITY.md).
 
@@ -219,7 +222,7 @@ Beide können deutlich mehr als RateTray und verdienen den ersten Blick:
 
 Das sind die Deluxe-Varianten, und wer ein Dashboard möchte, ist dort richtig. RateTray verfolgt
 stattdessen den Core-Temp-Ansatz: Der Wert wird ins Icon selbst gezeichnet, es gibt also nichts
-zu öffnen und nichts zu klicken. 352 KB, zwei Dienste, eine Idee.
+zu öffnen und nichts zu klicken. 377 KB, zwei Dienste, eine Idee.
 
 ## Marken
 
@@ -236,7 +239,7 @@ geprüft.
 
 Was das für dich als Leser bedeutet:
 
-- 197 Unit-Tests und 9 End-to-End-Tests, alle grün, und die App lief gegen echte Claude- und
+- 214 Unit-Tests und 9 End-to-End-Tests, alle grün, und die App lief gegen echte Claude- und
   Codex-Konten.
 - **Es gab kein unabhängiges menschliches Code-Review.** Das Programm liest deine
   Anmeldedateien, also lies [SECURITY.md](SECURITY.md) — dort steht, welche Dateien angefasst
