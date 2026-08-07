@@ -96,9 +96,14 @@ jobs:
             exit 1
           fi
 
+      # include-hidden-files defaults to false in v5, which tars the site with
+      # `--exclude=.[^/]*` and silently drops .well-known — where RFC 9116 requires
+      # security.txt to live. Every check above passes regardless, because they all run
+      # against _site rather than against what is actually served.
       - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
+          include-hidden-files: true
 
   deploy:
     needs: build
@@ -111,3 +116,23 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v5
+
+      # The checks in build all inspect _site, so none of them can see a file the upload step
+      # threw away — which is how .well-known went missing once with the build still green.
+      # Ask the deployed site instead: it is the only source that cannot be wrong.
+      - name: Check the security contact is served
+        run: |
+          for path in .well-known/security.txt .well-known/pgp-key.txt; do
+            url="${{ steps.deployment.outputs.page_url }}$path"
+            for attempt in 1 2 3 4 5; do
+              code=$(curl -sS -o /dev/null -w '%{http_code}' "$url" || echo 000)
+              [ "$code" = "200" ] && break
+              echo "$path: HTTP $code (attempt $attempt)"
+              sleep 10
+            done
+            if [ "$code" != "200" ]; then
+              echo "::error::$url is not served (HTTP $code)"
+              exit 1
+            fi
+            echo "$path: HTTP 200"
+          done
