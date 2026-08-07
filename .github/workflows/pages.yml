@@ -57,6 +57,45 @@ jobs:
           done
           exit $missing
 
+      # RFC 9116 requires an Expires date, and a security.txt past it is worse than none: it
+      # advertises a contact nobody is watching. Nothing renews it automatically, so the deploy
+      # is what enforces it — with two weeks of warning, which is long enough to edit one line.
+      - name: Check security.txt has not expired
+        working-directory: _site
+        run: |
+          expires=$(sed -n 's/^[Ee]xpires:[[:space:]]*//p' .well-known/security.txt | head -1 | tr -d '\r')
+          if [ -z "$expires" ]; then
+            echo "::error::security.txt has no Expires field"
+            exit 1
+          fi
+          days=$(( ( $(date -u -d "$(echo "$expires" | sed 's/\.[0-9]*Z$/Z/')" +%s) - $(date -u +%s) ) / 86400 ))
+          echo "security.txt expires in $days days ($expires)"
+          if [ "$days" -lt 14 ]; then
+            echo "::error::security.txt expires in $days days — set a new Expires in site/.well-known/security.txt"
+            exit 1
+          fi
+
+      # security.txt names a fingerprint and hosts the key it belongs to. Nothing at runtime
+      # notices when the two drift apart — a reporter just encrypts to the wrong key, or to one
+      # that has expired, and the report never arrives readable. So compare them here.
+      - name: Check the published PGP key matches security.txt
+        working-directory: _site
+        run: |
+          info=$(gpg --with-colons --import-options show-only --import .well-known/pgp-key.txt)
+          declared=$(sed -n 's/^[Ee]ncryption:[[:space:]]*openpgp4fpr://p' .well-known/security.txt | head -1 | tr -d '\r')
+          published=$(echo "$info" | awk -F: '$1=="fpr"{print tolower($10); exit}')
+          if [ "$declared" != "$published" ]; then
+            echo "::error::security.txt names openpgp4fpr:$declared but pgp-key.txt holds $published"
+            exit 1
+          fi
+          expiry=$(echo "$info" | awk -F: '$1=="pub"{print $7; exit}')
+          days=$(( ( expiry - $(date -u +%s) ) / 86400 ))
+          echo "pgp-key.txt $published expires in $days days"
+          if [ "$days" -lt 14 ]; then
+            echo "::error::the published PGP key expires in $days days — publish a new one"
+            exit 1
+          fi
+
       - uses: actions/upload-pages-artifact@v5
         with:
           path: _site

@@ -1,0 +1,22 @@
+# Security contact for ratetray.nowrap.net and the RateTray app it ships (RFC 9116).
+#
+# The advisory form is the preferred route: it is private from the first word and keeps the
+# report attached to the code. The address is there for anyone who cannot or will not use a
+# GitHub account — a finding should never go unreported over the shape of the mailbox.
+#
+# Expires is a promise that this file is still watched, so pages.yml fails the deploy before
+# the date passes rather than after. An expired security.txt says "nobody is home" louder
+# than no file at all. The same step checks that the key below is the one actually published.
+#
+# The key is served from this site rather than a keyserver: one fewer party between a reporter
+# and the right key, and it cannot go stale independently of this file. The openpgp4fpr line
+# repeats the fingerprint so the download can be checked against something.
+
+Contact: https://github.com/nowrap/rate-tray/security/advisories/new
+Contact: mailto:security@nowrap.net
+Encryption: https://ratetray.nowrap.net/.well-known/pgp-key.txt
+Encryption: openpgp4fpr:9ac4ee08cde987555f0034f13f09584104ada738
+Expires: 2027-08-01T00:00:00.000Z
+Policy: https://github.com/nowrap/rate-tray/blob/main/SECURITY.md
+Preferred-Languages: en, de
+Canonical: https://ratetray.nowrap.net/.well-known/security.txt
