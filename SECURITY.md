@@ -70,8 +70,18 @@ Two things to know before turning it on:
 ## Reporting a vulnerability
 
 Please open a [private security advisory](../../security/advisories/new) rather than a public
-issue. If you cannot, open a normal issue with only enough detail to make contact, and we will
-move it somewhere private.
+issue. If you would rather not use GitHub, or cannot, mail <security@nowrap.net> instead — a
+finding should not go unreported over the shape of the mailbox. Failing both, open a normal issue
+with only enough detail to make contact, and we will move it somewhere private.
+
+Mail can be encrypted to
+[`9AC4 EE08 CDE9 8755 5F00  34F1 3F09 5841 04AD A738`](https://ratetray.nowrap.net/.well-known/pgp-key.txt)
+(Ed25519, valid to 2029-08-07). Encryption is welcome but not expected — a report in plain text is
+worth far more than one that never gets sent.
+
+Both routes and the key are published machine-readably as
+[security.txt](https://ratetray.nowrap.net/.well-known/security.txt) (RFC 9116), which names this
+file as its policy.
 
 Expect a first response within a week. This is a spare-time project — there is no bounty and no
 guaranteed timeline, but credible reports will be taken seriously and credited unless you would
