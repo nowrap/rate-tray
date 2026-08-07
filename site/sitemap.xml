@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  The two pages of the site. Their hreflang relationship is already declared by the
+  <link rel="alternate"> elements in each page, so it is deliberately not repeated here —
+  one place to keep in step rather than two.
+
+  No <lastmod>: a hand-maintained date drifts out of step silently, and a date search engines
+  cannot trust is worse than none. If it is ever wanted, derive it in pages.yml from the git
+  commit date of each page.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://ratetray.nowrap.net/</loc>
+  </url>
+  <url>
+    <loc>https://ratetray.nowrap.net/de/</loc>
+  </url>
+</urlset>
