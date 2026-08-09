@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="RateTray">
+  <!-- The app icon's geometry (tools/New-AppIcon.ps1) at a 100-unit scale: two meters on a
+       rounded plate. The fills keep the service colours in both themes; only the plate and
+       the drained track shift lightness for dark browser chrome, hue and saturation held. -->
+  <style>
+    .plate { fill: #23262C }
+    .track { fill: #363B44 }
+    @media (prefers-color-scheme: dark) {
+      .plate { fill: #414752 }
+      .track { fill: #515866 }
+    }
+  </style>
+  <rect class="plate" x="2" y="2" width="96" height="96" rx="22"/>
+  <g class="track">
+    <rect x="25" y="19" width="20.5" height="62" rx="10.25"/>
+    <rect x="54.5" y="19" width="20.5" height="62" rx="10.25"/>
+  </g>
+  <rect x="25" y="27.68" width="20.5" height="53.32" rx="10.25" fill="#E08A64"/>
+  <rect x="54.5" y="42.56" width="20.5" height="38.44" rx="10.25" fill="#16C08F"/>
+</svg>
