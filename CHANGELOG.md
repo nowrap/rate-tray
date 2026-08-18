@@ -7,6 +7,12 @@ uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- A full limit shows **100** in its tray icon. It used to stop at 99, on the assumption that three
+  digits do not fit — they do, the renderer scales them down — so the one reading that has to be
+  right was the one disagreeing with the details window and the hover card.
+
 ## [0.3.0] - 2026-08-07
 
 Polish where it shows and reach where it counts. The tray numbers read cleaner, the hover card

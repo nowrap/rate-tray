@@ -42,8 +42,14 @@ public sealed record LimitReading
 
     public int VariantCount { get; init; } = 1;
 
-    /// <summary>Text drawn into the tray icon. Percentages are shown without a sign.</summary>
-    public string IconText => Percent >= 99.5 ? "99" : Math.Round(Percent).ToString("0");
+    /// <summary>
+    /// Text drawn into the tray icon: the same rounded percentage the details window and the
+    /// hover card show, without a sign. A full limit reads "100" — the renderer shrinks a
+    /// three-digit value to fit, and capping it at "99" instead meant the one number that has
+    /// to be right disagreed with every other place the same reading is shown.
+    /// Values outside 0..100 are clamped: a provider reporting 103 % is still just "full".
+    /// </summary>
+    public string IconText => Math.Round(Math.Clamp(Percent, 0, 100)).ToString("0");
 
     public string ResetText()
     {
