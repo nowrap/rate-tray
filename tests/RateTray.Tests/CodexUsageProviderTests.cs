@@ -93,4 +93,47 @@ public class CodexUsageProviderTests
         Assert.Empty(CodexUsageProvider.Parse(Json("{}"), out var plan));
         Assert.Null(plan);
     }
+
+    /// <summary>An app-server error handing the upstream HTTP body back verbatim.</summary>
+    private const string ServerAnswer = """
+    failed to fetch codex rate limits: GET https://chatgpt.com/backend-api/wham/usage failed: {
+      "error": {
+        "message": "Provided authentication token is expired",
+        "type": null,
+        "code": "token_expired",
+        "param": null
+      },
+      "status": 401
+    }
+    """;
+
+    [Fact]
+    public void A_server_error_keeps_its_sentence_and_drops_the_payload()
+    {
+        var summary = CodexServerException.Summarize(ServerAnswer);
+
+        Assert.Equal(
+            "failed to fetch codex rate limits: GET https://chatgpt.com/backend-api/wham/usage failed: "
+            + "Provided authentication token is expired",
+            summary);
+    }
+
+    [Fact]
+    public void A_server_error_without_a_payload_is_passed_on_unchanged()
+    {
+        Assert.Equal("account not authenticated", CodexServerException.Summarize("account not authenticated"));
+    }
+
+    [Fact]
+    public void An_unreadable_payload_leaves_the_part_the_app_server_wrote()
+    {
+        Assert.Equal("request failed", CodexServerException.Summarize("request failed: {not json at all"));
+    }
+
+    [Fact]
+    public void A_refused_token_is_recognised_as_an_expired_sign_in()
+    {
+        Assert.True(new CodexServerException(ServerAnswer).TokenExpired);
+        Assert.False(new CodexServerException("app-server exited").TokenExpired);
+    }
 }

@@ -61,6 +61,15 @@ public sealed class CodexUsageProvider(CodexOptions options) : IUsageProvider
         {
             return ProviderResult.Failed(Group, Loc.T("error.codex.timeout", options.TimeoutSeconds)) with { Auth = auth };
         }
+        catch (CodexServerException ex) when (ex.TokenExpired)
+        {
+            // The server refused the very token the auth file says is good for days yet — an
+            // access token can be revoked long before its `exp`. Between the two, the refusal
+            // is the one that is true, so the login is reported as expired rather than leaving
+            // "valid until Sunday" next to a 401 nobody can act on.
+            return ProviderResult.Failed(Group, Loc.T("error.codex.expired"))
+                with { Auth = auth is null ? null : auth with { IsValid = false } };
+        }
         catch (Exception ex)
         {
             return ProviderResult.Failed(Group, Loc.T("error.fetchFailed", ex.Message)) with { Auth = auth };
@@ -113,10 +122,7 @@ public sealed class CodexUsageProvider(CodexOptions options) : IUsageProvider
                 if (ReadId(message) != RateLimitsId) continue; // skip notifications and the initialize reply
 
                 if (message["error"] is JsonObject err)
-                {
-                    var text = err["message"]?.GetValue<string>() ?? Loc.T("error.codex.rpcUnknown");
-                    throw new InvalidOperationException(text);
-                }
+                    throw new CodexServerException(err["message"]?.GetValue<string>() ?? Loc.T("error.codex.rpcUnknown"));
 
                 return message["result"] as JsonObject
                        ?? throw new InvalidOperationException(Loc.T("error.codex.noResult"));
@@ -303,4 +309,49 @@ public sealed class CodexUsageProvider(CodexOptions options) : IUsageProvider
 
     private static string Slug(string value) =>
         new(value.ToLowerInvariant().Select(c => char.IsLetterOrDigit(c) ? c : '_').ToArray());
+}
+
+/// <summary>
+/// An error the app-server answered the RPC with. It passes the upstream HTTP body on verbatim,
+/// so the raw text is regularly a whole pretty-printed JSON document — several lines of it, of
+/// which exactly one sentence is addressed to a person. <see cref="Exception.Message"/> is that
+/// sentence; the raw document is only searched for the code that says the login was refused.
+/// </summary>
+internal sealed class CodexServerException(string raw) : Exception(Summarize(raw))
+{
+    /// <summary>The server rejected the token itself, rather than failing to answer.</summary>
+    public bool TokenExpired { get; } = raw.Contains("token_expired", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// The human-readable part of a server error: the text before the embedded body, plus the
+    /// body's own <c>message</c> when it has one. Anything that cannot be read as JSON keeps
+    /// only the text in front of it — that is the part the app-server itself wrote.
+    /// </summary>
+    internal static string Summarize(string raw)
+    {
+        var brace = raw.IndexOf('{');
+        if (brace < 0) return raw.Trim();
+
+        var head = raw[..brace].Trim().TrimEnd(':', '-', ' ');
+        var body = raw[brace..].Trim();
+
+        string? detail = null;
+        try
+        {
+            if (JsonNode.Parse(body) is JsonObject json)
+                detail = (json["error"]?["message"] ?? json["message"])?.GetValue<string>();
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException)
+        {
+            // Not JSON after all, or a `message` that is not a string: the head still stands.
+        }
+
+        return (head, detail) switch
+        {
+            ({ Length: > 0 }, { Length: > 0 }) => $"{head}: {detail}",
+            ({ Length: > 0 }, _) => head,
+            (_, { Length: > 0 }) => detail,
+            _ => raw.Trim(),
+        };
+    }
 }

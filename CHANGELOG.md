@@ -16,6 +16,9 @@ uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   body back verbatim, several lines of JSON, and every line after the first was drawn over the
   readings below it. An error is now a single line wherever it is shown, cut with an ellipsis where
   it does not fit — as is every other string the app does not write itself.
+- A Codex sign-in the server refuses is reported as expired, instead of "valid until" a date days
+  away. The access token in `auth.json` can be revoked long before the expiry it carries; when the
+  server answers `token_expired`, that answer wins, and the error says to run `codex login`.
 
 ## [0.3.0] - 2026-08-07
 
