@@ -7,6 +7,12 @@ uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-08-18
+
+A patch release for three things that were wrong in plain sight: a limit that was full without
+saying so, an error message that took the panel down with it, and a sign-in called valid while
+the server was refusing it.
+
 ### Fixed
 
 - A full limit shows **100** in its tray icon. It used to stop at 99, on the assumption that three
@@ -140,7 +146,8 @@ First release.
 - Autostart via the per-user Run key.
 - `--once`, `--details` and `--settings` diagnostic modes.
 
-[Unreleased]: https://github.com/nowrap/rate-tray/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/nowrap/rate-tray/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/nowrap/rate-tray/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/nowrap/rate-tray/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/nowrap/rate-tray/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/nowrap/rate-tray/releases/tag/v0.1.0
