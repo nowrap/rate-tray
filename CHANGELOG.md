@@ -12,6 +12,10 @@ uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - A full limit shows **100** in its tray icon. It used to stop at 99, on the assumption that three
   digits do not fit — they do, the renderer scales them down — so the one reading that has to be
   right was the one disagreeing with the details window and the hover card.
+- A failed poll no longer paints the server's answer across the panel. Codex hands the upstream HTTP
+  body back verbatim, several lines of JSON, and every line after the first was drawn over the
+  readings below it. An error is now a single line wherever it is shown, cut with an ellipsis where
+  it does not fit — as is every other string the app does not write itself.
 
 ## [0.3.0] - 2026-08-07
 

@@ -178,24 +178,27 @@ public sealed class TooltipWindow : Form
         var textLeft = pad + Px(22);
         var head = _reading?.Label ?? _group;
 
-        using (var brush = new SolidBrush(Foreground))
-            g.DrawString(head, _labelFont, brush, textLeft, Px(9));
+        // The card is width-clamped, so anything longer than it — an error carrying a server's
+        // answer above all — is drawn to the edge and cut with an ellipsis, never past it.
+        var value = _reading is { } r ? $"{Math.Round(r.Percent)} %" : null;
+        var valueWidth = value is null ? 0f : g.MeasureString(value, _valueFont).Width;
 
-        if (_reading is { } reading)
+        using (var brush = new SolidBrush(Foreground))
+            TextLine.Draw(g, head, _labelFont, brush, textLeft, Px(9), Width - pad - textLeft - valueWidth - Px(6));
+
+        if (_reading is { } reading && value is not null)
         {
-            var value = $"{Math.Round(reading.Percent)} %";
             var color = _palette.ForReading(reading.Group, reading.Percent, reading.Variant, reading.VariantCount, Dark);
-            var width = g.MeasureString(value, _valueFont).Width;
 
             using var brush = new SolidBrush(color);
-            g.DrawString(value, _valueFont, brush, Width - pad - width, Px(7));
+            g.DrawString(value, _valueFont, brush, Width - pad - valueWidth, Px(7));
         }
 
         var detail = _error ?? _reading?.ResetText();
         if (string.IsNullOrEmpty(detail)) return;
 
         using var detailBrush = new SolidBrush(_error is null ? Muted : Harmony.Legible(_palette.Critical, Dark));
-        g.DrawString(detail, _smallFont, detailBrush, textLeft, Px(30));
+        TextLine.Draw(g, detail, _smallFont, detailBrush, textLeft, Px(30), Width - pad - textLeft);
     }
 
     protected override void Dispose(bool disposing)
