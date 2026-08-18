@@ -220,6 +220,10 @@ public sealed class DetailsForm : Form
         var barLeft = Px(250);
         var barWidth = Px(200);
         var valueLeft = barLeft + barWidth + Px(12);
+        // Text that comes from a provider is drawn into these widths, never past them: an error
+        // may be a server's whole answer, and a row here is one line high.
+        var fullWidth = Width - 2 * pad;
+        var labelWidth = barLeft - pad - Px(12);
 
         if (_results.Count == 0)
         {
@@ -240,7 +244,7 @@ public sealed class DetailsForm : Form
                 var text = Loc.T("details.auth", auth.Summary()) +
                            (auth.Detail is { Length: > 0 } d ? $"  ·  {d}" : "");
                 using var brush = new SolidBrush(auth.IsValid ? Muted : Harmony.Legible(_palette.Critical, Dark));
-                g.DrawString(text, _smallFont, brush, pad, y);
+                TextLine.Draw(g, text, _smallFont, brush, pad, y, fullWidth);
                 y += Px(18);
             }
 
@@ -249,7 +253,7 @@ public sealed class DetailsForm : Form
                 // Not an error, so not in the critical colour — but not muted away either:
                 // an endpoint someone else configured should catch the eye once.
                 using var brush = new SolidBrush(Harmony.Legible(_palette.Warn, Dark));
-                g.DrawString(notice, _smallFont, brush, pad, y);
+                TextLine.Draw(g, notice, _smallFont, brush, pad, y, fullWidth);
                 y += Px(18);
             }
 
@@ -260,7 +264,7 @@ public sealed class DetailsForm : Form
                     error += "  ·  " + Loc.T("details.retryIn", LimitReading.FormatSpan(retry - DateTimeOffset.Now));
 
                 using var brush = new SolidBrush(Harmony.Legible(_palette.Critical, Dark));
-                g.DrawString(error, _smallFont, brush, pad, y);
+                TextLine.Draw(g, error, _smallFont, brush, pad, y, fullWidth);
                 y += Px(20);
             }
 
@@ -268,8 +272,8 @@ public sealed class DetailsForm : Form
             {
                 var color = _palette.ForReading(reading.Group, reading.Percent, reading.Variant, reading.VariantCount, Dark);
 
-                g.DrawString(reading.Label + (reading.IsActive ? "  •" : ""), _labelFont, foreground, pad, y);
-                g.DrawString(reading.ResetText(), _smallFont, muted, pad, y + Px(18));
+                TextLine.Draw(g, reading.Label + (reading.IsActive ? "  •" : ""), _labelFont, foreground, pad, y, labelWidth);
+                TextLine.Draw(g, reading.ResetText(), _smallFont, muted, pad, y + Px(18), labelWidth);
 
                 DrawBar(g, new Rectangle(barLeft, y + Px(12), barWidth, Px(8)), reading.Percent, color);
 

@@ -42,8 +42,14 @@ public sealed record LimitReading
 
     public int VariantCount { get; init; } = 1;
 
-    /// <summary>Text drawn into the tray icon. Percentages are shown without a sign.</summary>
-    public string IconText => Percent >= 99.5 ? "99" : Math.Round(Percent).ToString("0");
+    /// <summary>
+    /// Text drawn into the tray icon: the same rounded percentage the details window and the
+    /// hover card show, without a sign. A full limit reads "100" — the renderer shrinks a
+    /// three-digit value to fit, and capping it at "99" instead meant the one number that has
+    /// to be right disagreed with every other place the same reading is shown.
+    /// Values outside 0..100 are clamped: a provider reporting 103 % is still just "full".
+    /// </summary>
+    public string IconText => Math.Round(Math.Clamp(Percent, 0, 100)).ToString("0");
 
     public string ResetText()
     {
@@ -117,6 +123,28 @@ public sealed record AuthStatus
 /// <summary>Outcome of a single provider poll: either readings, or a reason why not.</summary>
 public sealed record ProviderResult(string Group, IReadOnlyList<LimitReading> Readings, string? Error)
 {
+    /// <summary>
+    /// Longest error kept. Past this nothing is being read any more — it is a payload being
+    /// stared at. The cause is always at the front of a server message, so the tail is what goes.
+    /// </summary>
+    private const int ErrorLimit = 200;
+
+    private readonly string? _error = OneLine(Error);
+
+    /// <summary>
+    /// Why the poll failed — always a single, bounded line. Providers pass on what a server
+    /// said, and a server can answer with a whole pretty-printed JSON document: the details
+    /// window and the hover card each give the error exactly one line of layout, so a
+    /// multi-line message was painted straight across the readings underneath it.
+    /// Normalising here rather than at each drawing site also keeps the native tooltip and
+    /// the <c>--once</c> output to one line.
+    /// </summary>
+    public string? Error
+    {
+        get => _error;
+        init => _error = OneLine(value);
+    }
+
     public bool Ok => Error is null;
 
     /// <summary>Reported even when the poll failed — that is exactly when it matters.</summary>
@@ -153,4 +181,16 @@ public sealed record ProviderResult(string Group, IReadOnlyList<LimitReading> Re
 
     public static ProviderResult Failed(string group, string error) =>
         new(group, [], error);
+
+    /// <summary>
+    /// Collapses every run of whitespace — newlines included — into single spaces and cuts the
+    /// result to <see cref="ErrorLimit"/> characters.
+    /// </summary>
+    internal static string? OneLine(string? text)
+    {
+        if (text is null) return null;
+
+        var flat = string.Join(' ', text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+        return flat.Length <= ErrorLimit ? flat : flat[..(ErrorLimit - 1)].TrimEnd() + "…";
+    }
 }

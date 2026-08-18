@@ -30,9 +30,16 @@ public class LimitReadingTests
     [InlineData(99.5)]
     [InlineData(99.9)]
     [InlineData(100)]
-    public void A_full_limit_shows_99_because_three_digits_do_not_fit_an_icon(double percent)
+    [InlineData(104)]
+    public void A_full_limit_shows_100_like_every_other_view_of_it(double percent)
     {
-        Assert.Equal("99", Reading(percent).IconText);
+        Assert.Equal("100", Reading(percent).IconText);
+    }
+
+    [Fact]
+    public void A_negative_percentage_still_shows_a_number()
+    {
+        Assert.Equal("0", Reading(-3).IconText);
     }
 
     [Fact]
