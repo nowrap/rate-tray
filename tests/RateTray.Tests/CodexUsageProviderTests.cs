@@ -103,6 +103,26 @@ public class CodexUsageProviderTests
     }
 
     [Fact]
+    public void Parse_recognises_the_default_bucket_by_the_id_the_payload_states()
+    {
+        // The account-wide bucket is not always called "codex": this account has reported
+        // "premium" too. Skipping the literal rather than the stated id would list that one
+        // limit twice — once from rateLimits, once from the map — as two identical rows.
+        const string payload = """
+        {
+          "rateLimits": { "limitId": "premium", "primary": { "usedPercent": 6, "windowDurationMins": 10080 }, "planType": "plus" },
+          "rateLimitsByLimitId": {
+            "premium": { "limitId": "premium", "primary": { "usedPercent": 6, "windowDurationMins": 10080 }, "planType": "plus" }
+          }
+        }
+        """;
+
+        var reading = Assert.Single(CodexUsageProvider.Parse(Json(payload), out _));
+
+        Assert.Equal("codex.primary", reading.Id);
+    }
+
+    [Fact]
     public void Parse_skips_a_window_without_a_used_percentage()
     {
         const string payload = """

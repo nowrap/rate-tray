@@ -148,9 +148,11 @@ public sealed class CodexUsageProvider(CodexOptions options) : IUsageProvider
         var readings = new List<LimitReading>();
 
         // `rateLimits` is the single-bucket view; `rateLimitsByLimitId` may carry more.
+        string? covered = null;
         if (result["rateLimits"] is JsonObject primaryBucket)
         {
             planType = primaryBucket["planType"]?.GetValue<string>();
+            covered = primaryBucket["limitId"]?.GetValue<string>() ?? "codex";
             AddWindows(readings, primaryBucket, "codex", planType);
         }
 
@@ -158,8 +160,14 @@ public sealed class CodexUsageProvider(CodexOptions options) : IUsageProvider
         {
             foreach (var (limitId, node) in buckets)
             {
-                // The default bucket is already covered by `rateLimits` above.
-                if (node is not JsonObject bucket || limitId.Equals("codex", StringComparison.OrdinalIgnoreCase)) continue;
+                if (node is not JsonObject bucket) continue;
+
+                // Whatever the account-wide bucket is called on this plan — it answers as
+                // "codex" here and has answered "premium" before — `rateLimits` already
+                // covered it. Matching the literal instead of the id the payload states would
+                // list that one limit a second time, as a row identical to the first.
+                if (covered is { } id && limitId.Equals(id, StringComparison.OrdinalIgnoreCase)) continue;
+
                 AddWindows(readings, bucket, $"codex.{Slug(limitId)}", bucket["planType"]?.GetValue<string>());
             }
         }

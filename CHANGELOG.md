@@ -16,6 +16,10 @@ uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   floor and the settings dialog exposes it; the menu's refresh command ignores it, because
   someone asking for numbers now is entitled to the request. Codex is unaffected: it is a local
   process with nothing to spend.
+- The account-wide Codex bucket is recognised by the id the payload states rather than by the
+  literal "codex". It has answered `premium` on this account before, and under that name it
+  would have been listed twice — once from `rateLimits`, once from `rateLimitsByLimitId` — as
+  two rows for one limit.
 - A Codex plan with a per-model quota says which model each limit belongs to. Two weekly windows
   both read "Codex · Week", so the model's own limit — sitting at 0 % until that model runs —
   looked like the account's limit had stopped filling. The model's window is now labelled after
