@@ -7,6 +7,11 @@ uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-08-19
+
+A patch release for two things one screenshot showed at once: a rate limit the tray had been
+earning for itself, and two Codex rows that read alike because one of them was missing its name.
+
 ### Fixed
 
 - The usage endpoint is asked at most once every five minutes, whatever the refresh interval is
@@ -16,15 +21,15 @@ uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   floor and the settings dialog exposes it; the menu's refresh command ignores it, because
   someone asking for numbers now is entitled to the request. Codex is unaffected: it is a local
   process with nothing to spend.
-- The account-wide Codex bucket is recognised by the id the payload states rather than by the
-  literal "codex". It has answered `premium` on this account before, and under that name it
-  would have been listed twice — once from `rateLimits`, once from `rateLimitsByLimitId` — as
-  two rows for one limit.
 - A Codex plan with a per-model quota says which model each limit belongs to. Two weekly windows
   both read "Codex · Week", so the model's own limit — sitting at 0 % until that model runs —
   looked like the account's limit had stopped filling. The model's window is now labelled after
   it, the way Claude's per-model window already was, and only the account-wide window keeps the
   "active" dot: whether a model is the one currently running is not something the server says.
+- The account-wide Codex bucket is recognised by the id the payload states rather than by the
+  literal "codex". Accounts have reported `premium` under that key as well, and under that name
+  the one limit would have been listed twice — once from `rateLimits`, once from
+  `rateLimitsByLimitId` — as two rows nothing tells apart.
 
 ## [0.3.1] - 2026-08-18
 
@@ -165,7 +170,8 @@ First release.
 - Autostart via the per-user Run key.
 - `--once`, `--details` and `--settings` diagnostic modes.
 
-[Unreleased]: https://github.com/nowrap/rate-tray/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/nowrap/rate-tray/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/nowrap/rate-tray/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/nowrap/rate-tray/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/nowrap/rate-tray/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/nowrap/rate-tray/compare/v0.1.0...v0.2.0

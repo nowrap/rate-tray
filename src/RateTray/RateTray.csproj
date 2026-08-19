@@ -9,7 +9,7 @@
     <LangVersion>latest</LangVersion>
     <AssemblyName>RateTray</AssemblyName>
     <RootNamespace>RateTray</RootNamespace>
-    <Version>0.3.1</Version>
+    <Version>0.3.2</Version>
     <Product>RateTray</Product>
     <Company>nowrap</Company>
     <Authors>nowrap</Authors>
