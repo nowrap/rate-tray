@@ -107,6 +107,7 @@
   "label.claude.extraUsage": "Extra credit",
   "note.claude.extraCurrency": "Limit in {0}",
   "label.codex.window": "Codex · {0}",
+  "label.codex.windowNamed": "{0} · {1}",
   "note.endpoint": "Endpoint: {0}",
 
   "error.claude.noCredentials": "No Claude sign-in found (.credentials.json missing)",

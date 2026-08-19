@@ -7,6 +7,14 @@ uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- A Codex plan with a per-model quota says which model each limit belongs to. Two weekly windows
+  both read "Codex · Week", so the model's own limit — sitting at 0 % until that model runs —
+  looked like the account's limit had stopped filling. The model's window is now labelled after
+  it, the way Claude's per-model window already was, and only the account-wide window keeps the
+  "active" dot: whether a model is the one currently running is not something the server says.
+
 ## [0.3.1] - 2026-08-18
 
 A patch release for three things that were wrong in plain sight: a limit that was full without

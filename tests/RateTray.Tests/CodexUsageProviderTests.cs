@@ -11,13 +11,15 @@ public class CodexUsageProviderTests
     {
       "rateLimits": {
         "limitId": "codex",
+        "limitName": null,
         "primary":   { "usedPercent": 6,  "windowDurationMins": 10080, "resetsAt": 1786468203 },
         "secondary": { "usedPercent": 41, "windowDurationMins": 300,   "resetsAt": 1786400000 },
         "planType": "plus"
       },
       "rateLimitsByLimitId": {
-        "codex":     { "limitId": "codex",     "primary": { "usedPercent": 6, "windowDurationMins": 10080, "resetsAt": 1786468203 }, "planType": "plus" },
-        "codex-max": { "limitId": "codex-max", "primary": { "usedPercent": 3, "windowDurationMins": 1440,  "resetsAt": 1786468203 }, "planType": "pro" }
+        "codex":       { "limitId": "codex",       "limitName": null, "primary": { "usedPercent": 6, "windowDurationMins": 10080, "resetsAt": 1786468203 }, "planType": "plus" },
+        "codex-max":   { "limitId": "codex-max",   "primary": { "usedPercent": 3, "windowDurationMins": 1440,  "resetsAt": 1786468203 }, "planType": "pro" },
+        "codex_spark": { "limitId": "codex_spark", "limitName": "GPT-5.3-Codex-Spark", "primary": { "usedPercent": 0, "windowDurationMins": 10080, "resetsAt": 1786500000 }, "planType": "plus" }
       }
     }
     """;
@@ -61,6 +63,43 @@ public class CodexUsageProviderTests
 
         Assert.Single(readings, r => r.Id == "codex.primary");
         Assert.Contains(readings, r => r.Id == "codex.codex_max.primary" && r.Percent == 3);
+    }
+
+    /// <summary>
+    /// A plan with a per-model quota reports two weekly windows: the account's and the model's.
+    /// Both read "Codex · Week" until the model is named, and the model's — untouched at 0 %
+    /// until that model runs — then looks like a bar that stopped filling.
+    /// </summary>
+    [Fact]
+    public void Parse_names_a_per_model_bucket_after_the_model()
+    {
+        var readings = CodexUsageProvider.Parse(Json(Payload), out _);
+
+        var account = readings.Single(r => r.Id == "codex.primary");
+        var model = readings.Single(r => r.Id == "codex.codex_spark.primary");
+
+        Assert.Equal("Codex · Week", account.Label);
+        Assert.Equal("Week · GPT-5.3-Codex-Spark", model.Label);
+    }
+
+    [Fact]
+    public void Parse_falls_back_to_the_window_where_a_bucket_is_unnamed()
+    {
+        var readings = CodexUsageProvider.Parse(Json(Payload), out _);
+
+        Assert.Equal("Codex · 1 d", readings.Single(r => r.Id == "codex.codex_max.primary").Label);
+    }
+
+    [Fact]
+    public void Parse_marks_only_the_account_wide_window_as_active()
+    {
+        // A model's own limit moves solely while that model runs, and the server does not say
+        // whether it is. A dot on both windows claims something we do not know and costs the
+        // one that is true its meaning.
+        var readings = CodexUsageProvider.Parse(Json(Payload), out _);
+
+        Assert.True(readings.Single(r => r.Id == "codex.primary").IsActive);
+        Assert.False(readings.Single(r => r.Id == "codex.codex_spark.primary").IsActive);
     }
 
     [Fact]

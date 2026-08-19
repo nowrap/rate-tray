@@ -170,8 +170,17 @@ public sealed class CodexUsageProvider(CodexOptions options) : IUsageProvider
             .ToList();
     }
 
+    /// <summary>
+    /// Turns one bucket's windows into readings. Every bucket but the account-wide one belongs
+    /// to a single model and names it in <c>limitName</c>; without that name a plan with a
+    /// per-model quota shows two rows both reading "Codex · Week", and the one counting a model
+    /// that has not been used yet looks like the same limit refusing to move.
+    /// </summary>
     private static void AddWindows(List<LimitReading> readings, JsonObject bucket, string prefix, string? planType)
     {
+        var accountWide = prefix == "codex";
+        var limitName = bucket["limitName"]?.GetValue<string>();
+
         foreach (var slot in (string[])["primary", "secondary"])
         {
             if (bucket[slot] is not JsonObject window) continue;
@@ -180,17 +189,27 @@ public sealed class CodexUsageProvider(CodexOptions options) : IUsageProvider
             var minutes = window["windowDurationMins"]?.GetValue<long?>();
             var span = minutes is > 0 ? TimeSpan.FromMinutes(minutes.Value) : (TimeSpan?)null;
             var resets = window["resetsAt"]?.GetValue<long?>();
+            var windowText = span is { } s ? LimitReading.FormatWindow(s) : slot;
 
             readings.Add(new LimitReading
             {
-                Id = prefix == "codex" ? $"codex.{slot}" : $"{prefix}.{slot}",
-                Label = Loc.T("label.codex.window", span is { } s ? LimitReading.FormatWindow(s) : slot),
+                Id = accountWide ? $"codex.{slot}" : $"{prefix}.{slot}",
+                // "Week · <model>", the shape Claude's per-model window already uses, and
+                // without the service prefix on purpose: "Codex · Week · GPT-5.3-Codex-Spark"
+                // is wider than the label column, so the ellipsis would eat the model name —
+                // the only part that tells the two weekly rows apart.
+                Label = limitName is { Length: > 0 } name
+                    ? Loc.T("label.codex.windowNamed", windowText, name)
+                    : Loc.T("label.codex.window", windowText),
                 Group = "Codex",
                 Percent = percentNode.GetValue<double>(),
                 ResetsAt = resets is > 0 ? DateTimeOffset.FromUnixTimeSeconds(resets.Value) : null,
                 Window = span,
                 Note = planType,
-                IsActive = slot == "primary",
+                // Only the account-wide window is the one being spent right now: a model's own
+                // limit moves solely while that model runs, and the server does not say whether
+                // it is. Marking both as active made the two indistinguishable rows worse.
+                IsActive = slot == "primary" && accountWide,
             });
         }
     }
