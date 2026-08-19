@@ -7,6 +7,25 @@ uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- The usage endpoint is asked at most once every five minutes, whatever the refresh interval is
+  set to. A weekly window does not move in ninety seconds, and the tray is not the only client
+  spending the account's request quota — so polling that bought nothing was earning the 429 that
+  then froze the display for a quarter of an hour at a time. `claude.minIntervalSeconds` sets the
+  floor and the settings dialog exposes it; the menu's refresh command ignores it, because
+  someone asking for numbers now is entitled to the request. Codex is unaffected: it is a local
+  process with nothing to spend.
+- The account-wide Codex bucket is recognised by the id the payload states rather than by the
+  literal "codex". It has answered `premium` on this account before, and under that name it
+  would have been listed twice — once from `rateLimits`, once from `rateLimitsByLimitId` — as
+  two rows for one limit.
+- A Codex plan with a per-model quota says which model each limit belongs to. Two weekly windows
+  both read "Codex · Week", so the model's own limit — sitting at 0 % until that model runs —
+  looked like the account's limit had stopped filling. The model's window is now labelled after
+  it, the way Claude's per-model window already was, and only the account-wide window keeps the
+  "active" dot: whether a model is the one currently running is not something the server says.
+
 ## [0.3.1] - 2026-08-18
 
 A patch release for three things that were wrong in plain sight: a limit that was full without

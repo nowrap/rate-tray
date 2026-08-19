@@ -86,6 +86,7 @@ public sealed class TrayApp : ApplicationContext
 
         _lastGood = UsageCache.Load();
         _schedule = new PollScheduler(_config.MaxBackoffMinutes);
+        ApplyPollSpacing();
 
         BuildMenu();
         _menu.Opened += (_, _) => HideTooltip();
@@ -199,15 +200,16 @@ public sealed class TrayApp : ApplicationContext
     /// </summary>
     private ProviderResult RememberAndRestore(ProviderResult result)
     {
+        var now = DateTimeOffset.Now;
+
         if (result.Ok)
         {
-            _lastGood[result.Group] = new CachedReadings(DateTimeOffset.Now, result.Readings);
-            _schedule.RecordSuccess(result.Group);
+            _lastGood[result.Group] = new CachedReadings(now, result.Readings);
+            _schedule.RecordSuccess(result.Group, now);
             UsageCache.Save(_lastGood);
             return result;
         }
 
-        var now = DateTimeOffset.Now;
         var retryAt = _schedule.RecordFailure(
             result.Group, result.RetryAfter, now, _config.RefreshSeconds, result.RateLimited);
 
@@ -227,6 +229,17 @@ public sealed class TrayApp : ApplicationContext
     }
 
     private void ScheduleNextPoll() => _nextPoll = DateTimeOffset.Now.AddMilliseconds(_timer.Interval);
+
+    /// <summary>
+    /// Hands each provider's own floor to the scheduler, so the timer may tick as often as the
+    /// fastest of them allows. Asked of the providers rather than decided here: whether a poll
+    /// costs anything is a property of what is being polled — a local process that answers for
+    /// free, or a metered endpoint the tray is not the only client of.
+    /// </summary>
+    private void ApplyPollSpacing()
+    {
+        foreach (var provider in _providers) _schedule.SetMinInterval(provider.Group, provider.MinInterval);
+    }
 
     private ProviderResult LastResultFor(string group) =>
         _lastResults.FirstOrDefault(r => r.Group == group)
@@ -614,6 +627,7 @@ public sealed class TrayApp : ApplicationContext
 
         Loc.Use(_config.Language);
         _timer.Interval = PollIntervalMs;
+        ApplyPollSpacing();
         ScheduleNextPoll();
 
         // Both windows cache fonts and colours at construction, so they are rebuilt rather

@@ -32,6 +32,7 @@
   "settings.icons.rediscover": "Limits beim nächsten Abruf neu ermitteln",
   "settings.claude.enabled": "Claude-Limits abrufen",
   "settings.claude.autoRefresh": "OAuth-Token selbst erneuern (ungetesteter Pfad)",
+  "settings.claude.minInterval": "Mindestabstand zwischen Abfragen (Sekunden)",
   "settings.claude.timeout": "Usage-API-Timeout (Sekunden)",
   "settings.claude.credentials": "Anmeldedatei (leer = Standard)",
   "settings.codex.enabled": "Codex-Limits abrufen",
@@ -107,6 +108,7 @@
   "label.claude.extraUsage": "Extra-Guthaben",
   "note.claude.extraCurrency": "Limit in {0}",
   "label.codex.window": "Codex · {0}",
+  "label.codex.windowNamed": "{0} · {1}",
   "note.endpoint": "Endpunkt: {0}",
 
   "error.claude.noCredentials": "Keine Claude-Anmeldung gefunden (.credentials.json fehlt)",

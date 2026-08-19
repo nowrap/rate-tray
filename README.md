@@ -113,7 +113,8 @@ Everything is also editable directly in `%APPDATA%\RateTray\settings.json`:
     "unknown": null,
     "shadeSpread": 0.15          // how far limits of one service are shaded apart; 0 = off
   },
-  "claude": { "enabled": true, "autoRefreshToken": false, "timeoutSeconds": 20 },
+  "claude": { "enabled": true, "autoRefreshToken": false, "timeoutSeconds": 20,
+              "minIntervalSeconds": 300 },   // floor under how often the usage endpoint is asked
   "codex":  { "enabled": true, "executablePath": null, "timeoutSeconds": 30 }
 }
 ```

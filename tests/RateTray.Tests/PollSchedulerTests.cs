@@ -73,7 +73,7 @@ public class PollSchedulerTests
         var schedule = new PollScheduler();
         schedule.RecordFailure("Claude", null, Start, 90);
 
-        schedule.RecordSuccess("Claude");
+        schedule.RecordSuccess("Claude", Start);
 
         Assert.True(schedule.ShouldPoll("Claude", Start));
         Assert.Null(schedule.RetryAt("Claude"));
@@ -114,6 +114,109 @@ public class PollSchedulerTests
         var retryAt = schedule.RecordFailure("Claude", null, Start, 90);
 
         Assert.Equal(Start.AddSeconds(180), retryAt);
+    }
+
+    // ---------------------------------------------------------- minimum spacing
+
+    /// <summary>
+    /// The reason this exists: the usage endpoint has a request quota, the tray was asking it
+    /// every ninety seconds for numbers that move in hours, and the 429 that earned cost the
+    /// display a quarter of an hour at a time.
+    /// </summary>
+    [Fact]
+    public void A_provider_with_a_minimum_gap_is_skipped_until_it_has_passed()
+    {
+        var schedule = new PollScheduler();
+        schedule.SetMinInterval("Claude", TimeSpan.FromMinutes(5));
+
+        schedule.RecordSuccess("Claude", Start);
+
+        Assert.False(schedule.ShouldPoll("Claude", Start.AddSeconds(90)));
+        Assert.False(schedule.ShouldPoll("Claude", Start.AddSeconds(299)));
+        Assert.True(schedule.ShouldPoll("Claude", Start.AddSeconds(300)));
+    }
+
+    [Fact]
+    public void The_gap_is_measured_from_a_failed_poll_too()
+    {
+        // Whether the answer was usable does not change what the request cost.
+        var schedule = new PollScheduler();
+        schedule.SetMinInterval("Claude", TimeSpan.FromMinutes(30));
+
+        schedule.RecordFailure("Claude", null, Start, refreshSeconds: 90);
+
+        Assert.False(schedule.ShouldPoll("Claude", Start.AddMinutes(29)));
+        Assert.True(schedule.ShouldPoll("Claude", Start.AddMinutes(30)));
+    }
+
+    [Fact]
+    public void Skipping_for_the_gap_does_not_count_as_a_failure()
+    {
+        var schedule = new PollScheduler();
+        schedule.SetMinInterval("Claude", TimeSpan.FromMinutes(5));
+        schedule.RecordSuccess("Claude", Start);
+
+        for (var tick = 1; tick <= 3; tick++) schedule.ShouldPoll("Claude", Start.AddSeconds(90d * tick));
+
+        Assert.Equal(0, schedule.Failures("Claude"));
+        Assert.Null(schedule.RetryAt("Claude"));
+    }
+
+    [Fact]
+    public void A_provider_without_a_gap_is_polled_every_cycle()
+    {
+        var schedule = new PollScheduler();
+        schedule.RecordSuccess("Codex", Start);
+
+        Assert.True(schedule.ShouldPoll("Codex", Start));
+    }
+
+    [Fact]
+    public void The_first_poll_is_never_held_back()
+    {
+        var schedule = new PollScheduler();
+        schedule.SetMinInterval("Claude", TimeSpan.FromHours(1));
+
+        Assert.True(schedule.ShouldPoll("Claude", Start));
+        Assert.Null(schedule.PolledAt("Claude"));
+    }
+
+    [Fact]
+    public void An_explicit_refresh_beats_the_gap()
+    {
+        // Someone asking for numbers now is entitled to the request; the floor is there to
+        // stop the timer spending the quota, not to overrule the person watching.
+        var schedule = new PollScheduler();
+        schedule.SetMinInterval("Claude", TimeSpan.FromMinutes(5));
+        schedule.RecordSuccess("Claude", Start);
+
+        schedule.Reset();
+
+        Assert.True(schedule.ShouldPoll("Claude", Start));
+    }
+
+    [Fact]
+    public void The_gap_survives_a_reset_because_it_is_configuration()
+    {
+        var schedule = new PollScheduler();
+        schedule.SetMinInterval("Claude", TimeSpan.FromMinutes(5));
+
+        schedule.Reset();
+        schedule.RecordSuccess("Claude", Start);
+
+        Assert.False(schedule.ShouldPoll("Claude", Start.AddMinutes(4)));
+    }
+
+    [Fact]
+    public void A_backoff_longer_than_the_gap_still_wins()
+    {
+        var schedule = new PollScheduler();
+        schedule.SetMinInterval("Claude", TimeSpan.FromMinutes(1));
+
+        schedule.RecordFailure("Claude", null, Start, refreshSeconds: 90, rateLimited: true);
+
+        Assert.False(schedule.ShouldPoll("Claude", Start.AddMinutes(14)));
+        Assert.True(schedule.ShouldPoll("Claude", Start.AddMinutes(15)));
     }
 
     // ----------------------------------------------------------------- backoff

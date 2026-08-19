@@ -32,6 +32,7 @@
   "settings.icons.rediscover": "Re-discover limits on next poll",
   "settings.claude.enabled": "Read Claude limits",
   "settings.claude.autoRefresh": "Refresh the OAuth token myself (untested path)",
+  "settings.claude.minInterval": "Min. gap between usage requests (seconds)",
   "settings.claude.timeout": "Usage API timeout (seconds)",
   "settings.claude.credentials": "Credentials file (empty = default)",
   "settings.codex.enabled": "Read Codex limits",
@@ -107,6 +108,7 @@
   "label.claude.extraUsage": "Extra credit",
   "note.claude.extraCurrency": "Limit in {0}",
   "label.codex.window": "Codex · {0}",
+  "label.codex.windowNamed": "{0} · {1}",
   "note.endpoint": "Endpoint: {0}",
 
   "error.claude.noCredentials": "No Claude sign-in found (.credentials.json missing)",

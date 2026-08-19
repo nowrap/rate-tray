@@ -15,10 +15,28 @@ public sealed class PollScheduler(int maxBackoffMinutes = 15)
 {
     private readonly Dictionary<string, int> _failures = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, DateTimeOffset> _retryAt = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, TimeSpan> _minInterval = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, DateTimeOffset> _polledAt = new(StringComparer.OrdinalIgnoreCase);
 
-    /// <summary>False while the provider is backed off. Only a real poll may follow a true.</summary>
-    public bool ShouldPoll(string group, DateTimeOffset now) =>
-        !_retryAt.TryGetValue(group, out var until) || now >= until;
+    /// <summary>
+    /// Sets a floor under how often this provider is asked, independent of the refresh
+    /// interval and of whether it is failing. Configuration rather than state: it survives
+    /// <see cref="Reset"/>, which only releases what a failure or a poll put there.
+    /// </summary>
+    public void SetMinInterval(string group, TimeSpan interval) =>
+        _minInterval[group] = interval > TimeSpan.Zero ? interval : TimeSpan.Zero;
+
+    /// <summary>
+    /// False while the provider is backed off, and false again until its minimum gap has
+    /// passed. Only a real poll may follow a true.
+    /// </summary>
+    public bool ShouldPoll(string group, DateTimeOffset now)
+    {
+        if (_retryAt.TryGetValue(group, out var until) && now < until) return false;
+
+        return !_polledAt.TryGetValue(group, out var last)
+               || now >= last + _minInterval.GetValueOrDefault(group);
+    }
 
     /// <summary>When the provider will be tried again, or null if it is not backed off.</summary>
     public DateTimeOffset? RetryAt(string group) =>
@@ -26,10 +44,15 @@ public sealed class PollScheduler(int maxBackoffMinutes = 15)
 
     public int Failures(string group) => _failures.GetValueOrDefault(group);
 
-    public void RecordSuccess(string group)
+    /// <summary>When this provider was last actually reached, or null if it never was.</summary>
+    public DateTimeOffset? PolledAt(string group) =>
+        _polledAt.TryGetValue(group, out var last) ? last : null;
+
+    public void RecordSuccess(string group, DateTimeOffset now)
     {
         _failures.Remove(group);
         _retryAt.Remove(group);
+        _polledAt[group] = now;
     }
 
     /// <summary>
@@ -42,17 +65,23 @@ public sealed class PollScheduler(int maxBackoffMinutes = 15)
     {
         var failures = _failures.GetValueOrDefault(group) + 1;
         _failures[group] = failures;
+        _polledAt[group] = now;
 
         var until = now + Backoff(statedDelay, failures, refreshSeconds, maxBackoffMinutes, rateLimited);
         _retryAt[group] = until;
         return until;
     }
 
-    /// <summary>Clears every pause, so an explicit refresh reaches all providers at once.</summary>
+    /// <summary>
+    /// Clears every pause — the backoff and the minimum gap alike — so an explicit refresh
+    /// reaches all providers at once. Someone who asks for numbers now is entitled to the
+    /// request, even where the tray would have spaced it out on its own.
+    /// </summary>
     public void Reset()
     {
         _failures.Clear();
         _retryAt.Clear();
+        _polledAt.Clear();
     }
 
     /// <summary>
