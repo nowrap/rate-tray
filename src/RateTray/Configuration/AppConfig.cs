@@ -215,6 +215,14 @@ public sealed class ClaudeOptions
     public int TimeoutSeconds { get; set; } = 20;
 
     /// <summary>
+    /// Shortest gap between two requests to the usage endpoint, whatever the refresh interval
+    /// is set to. The endpoint has a request quota and the numbers behind it move in hours, so
+    /// asking it every ninety seconds spends the allowance without ever learning anything new —
+    /// and the 429 that follows costs the display for a quarter of an hour. 0 removes the floor.
+    /// </summary>
+    public int MinIntervalSeconds { get; set; } = 300;
+
+    /// <summary>
     /// Off by default: while Claude Code runs it keeps the token fresh on disk and we
     /// simply re-read it. Turning this on lets the tray refresh the OAuth token itself
     /// (and rewrite .credentials.json) so it keeps working when Claude Code is closed.
@@ -233,6 +241,7 @@ public sealed class ClaudeOptions
         TokenUrl = Sane.Text(TokenUrl, TokenUrlDefault);
         ClientId = Sane.Text(ClientId, ClientIdDefault);
         TimeoutSeconds = Math.Clamp(TimeoutSeconds, 5, 300);
+        MinIntervalSeconds = Math.Clamp(MinIntervalSeconds, 0, 3_600);
         return this;
     }
 }

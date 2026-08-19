@@ -47,6 +47,7 @@ public sealed class SettingsForm : Form
     private readonly CheckBox _codexEnabled = new();
     private readonly TextBox _codexPath = new();
     private readonly NumericUpDown _claudeTimeout = new() { Minimum = 5, Maximum = 300 };
+    private readonly NumericUpDown _claudeMinInterval = new() { Minimum = 0, Maximum = 3600, Increment = 30 };
     private readonly NumericUpDown _codexTimeout = new() { Minimum = 5, Maximum = 300 };
 
     private Color _claudeValue;
@@ -162,6 +163,7 @@ public sealed class SettingsForm : Form
         AddFullRow(grid, Check(_claudeAutoRefresh, Loc.T("settings.claude.autoRefresh")));
         AddRow(grid, Loc.T("settings.claude.credentials"), WithBrowse(_claudeCredentials));
         AddRow(grid, Loc.T("settings.claude.timeout"), _claudeTimeout);
+        AddRow(grid, Loc.T("settings.claude.minInterval"), _claudeMinInterval);
         AddFullRow(grid, new Label { Height = 8, Dock = DockStyle.Fill });
         AddFullRow(grid, Check(_codexEnabled, Loc.T("settings.codex.enabled")));
         AddRow(grid, Loc.T("settings.codex.path"), WithBrowse(_codexPath));
@@ -350,6 +352,7 @@ public sealed class SettingsForm : Form
         _claudeAutoRefresh.Checked = _config.Claude.AutoRefreshToken;
         _claudeCredentials.Text = _config.Claude.CredentialsPath ?? "";
         _claudeTimeout.Value = Math.Clamp(_config.Claude.TimeoutSeconds, 5, 300);
+        _claudeMinInterval.Value = Math.Clamp(_config.Claude.MinIntervalSeconds, 0, 3600);
         _codexEnabled.Checked = _config.Codex.Enabled;
         _codexPath.Text = _config.Codex.ExecutablePath ?? "";
         _codexTimeout.Value = Math.Clamp(_config.Codex.TimeoutSeconds, 5, 300);
@@ -384,6 +387,7 @@ public sealed class SettingsForm : Form
         _config.Claude.AutoRefreshToken = _claudeAutoRefresh.Checked;
         _config.Claude.CredentialsPath = Empty(_claudeCredentials.Text);
         _config.Claude.TimeoutSeconds = (int)_claudeTimeout.Value;
+        _config.Claude.MinIntervalSeconds = (int)_claudeMinInterval.Value;
         _config.Codex.Enabled = _codexEnabled.Checked;
         _config.Codex.ExecutablePath = Empty(_codexPath.Text);
         _config.Codex.TimeoutSeconds = (int)_codexTimeout.Value;

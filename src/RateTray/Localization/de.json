@@ -32,6 +32,7 @@
   "settings.icons.rediscover": "Limits beim nächsten Abruf neu ermitteln",
   "settings.claude.enabled": "Claude-Limits abrufen",
   "settings.claude.autoRefresh": "OAuth-Token selbst erneuern (ungetesteter Pfad)",
+  "settings.claude.minInterval": "Mindestabstand zwischen Abfragen (Sekunden)",
   "settings.claude.timeout": "Usage-API-Timeout (Sekunden)",
   "settings.claude.credentials": "Anmeldedatei (leer = Standard)",
   "settings.codex.enabled": "Codex-Limits abrufen",

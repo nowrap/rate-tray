@@ -9,6 +9,13 @@ uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- The usage endpoint is asked at most once every five minutes, whatever the refresh interval is
+  set to. A weekly window does not move in ninety seconds, and the tray is not the only client
+  spending the account's request quota — so polling that bought nothing was earning the 429 that
+  then froze the display for a quarter of an hour at a time. `claude.minIntervalSeconds` sets the
+  floor and the settings dialog exposes it; the menu's refresh command ignores it, because
+  someone asking for numbers now is entitled to the request. Codex is unaffected: it is a local
+  process with nothing to spend.
 - A Codex plan with a per-model quota says which model each limit belongs to. Two weekly windows
   both read "Codex · Week", so the model's own limit — sitting at 0 % until that model runs —
   looked like the account's limit had stopped filling. The model's window is now labelled after

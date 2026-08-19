@@ -116,7 +116,8 @@ Alles lässt sich auch direkt in `%APPDATA%\RateTray\settings.json` bearbeiten:
     "unknown": null,
     "shadeSpread": 0.15          // Abstufung zwischen Limits eines Dienstes; 0 = aus
   },
-  "claude": { "enabled": true, "autoRefreshToken": false, "timeoutSeconds": 20 },
+  "claude": { "enabled": true, "autoRefreshToken": false, "timeoutSeconds": 20,
+              "minIntervalSeconds": 300 },   // Mindestabstand zwischen Usage-Abfragen
   "codex":  { "enabled": true, "executablePath": null, "timeoutSeconds": 30 }
 }
 ```

@@ -29,6 +29,8 @@ public sealed class ClaudeUsageProvider(ClaudeOptions options) : IUsageProvider
 
     public bool Enabled => options.Enabled;
 
+    public TimeSpan MinInterval => TimeSpan.FromSeconds(Math.Max(0, options.MinIntervalSeconds));
+
     private string CredentialsPath => options.CredentialsPath is { Length: > 0 } p
         ? Environment.ExpandEnvironmentVariables(p)
         : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".claude", ".credentials.json");
