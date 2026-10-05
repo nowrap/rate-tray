@@ -7,6 +7,14 @@ uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Windows no longer pops up "git-remote-https.exe – 0xc0000142" every few refreshes. Codex
+  starts a `git ls-remote` for its plugin marketplace when the app server comes up, and the tray
+  killed the whole process tree the moment the limits arrived — often while that git was still
+  initialising. The tray now closes the server's stdin and waits up to ten seconds for it to
+  exit on its own; it only kills a server that lingers.
+
 ## [0.3.2] - 2026-08-19
 
 A patch release for two things one screenshot showed at once: a rate limit the tray had been
