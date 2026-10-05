@@ -134,7 +134,7 @@ public sealed class CodexUsageProvider(CodexOptions options) : IUsageProvider
         }
         finally
         {
-            TryKill(process);
+            await StopAsync(process).ConfigureAwait(false);
         }
 
         var diagnostics = await SafeAwait(stderr).ConfigureAwait(false);
@@ -306,6 +306,22 @@ public sealed class CodexUsageProvider(CodexOptions options) : IUsageProvider
         }
 
         return candidates.FirstOrDefault(File.Exists);
+    }
+
+    /// <summary>
+    /// Closes stdin so the server exits on its own, and kills only if it lingers. An
+    /// immediate tree kill hits the <c>git ls-remote</c> codex spawns at startup for its
+    /// plugin marketplace mid-initialisation, and Windows answers with a 0xc0000142 popup.
+    /// </summary>
+    private static async Task StopAsync(Process process)
+    {
+        try { process.StandardInput.Close(); }
+        catch (Exception ex) when (ex is IOException or ObjectDisposedException) { }
+
+        try { await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(10)).ConfigureAwait(false); }
+        catch (TimeoutException) { }
+
+        TryKill(process);
     }
 
     private static void TryKill(Process process)
